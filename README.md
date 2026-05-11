@@ -1,73 +1,97 @@
-# React + TypeScript + Vite
+# PrivacyShield
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+PrivacyShield is an AI-powered document privacy and redaction system designed to detect, classify, and protect Personally Identifiable Information (PII) from sensitive documents such as PDFs and images.
 
-Currently, two official plugins are available:
+The system automatically scans uploaded files, identifies confidential information, and performs secure redaction to prevent privacy leaks and unauthorized data exposure.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Secure User Authentication
+- PDF Upload and Preview
+- AI-Based PII Detection
+- Automatic Text Redaction
+- OCR Support for Scanned Documents
+- Downloadable Redacted PDFs
+- Responsive Frontend UI
+- REST API Integration
+- Real-Time Processing
+- Secure Backend Architecture
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Problem Statement
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+Organizations frequently share documents containing sensitive personal information such as:
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+- Aadhaar Numbers
+- PAN Numbers
+- Phone Numbers
+- Email Addresses
+- Bank Details
+- Addresses
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+Manual redaction is time-consuming, error-prone, and insecure.
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+PrivacyShield solves this problem using AI-powered automated detection and redaction techniques.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+---
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## Research Gap
+
+Existing redaction tools:
+- require manual selection,
+- fail on scanned documents,
+- lack intelligent contextual detection,
+- or are not suitable for scalable deployment.
+
+PrivacyShield addresses these limitations through:
+- automated AI-based detection,
+- OCR-enabled processing,
+- scalable backend services,
+- and secure API-driven workflows.
+
+---
+
+## Tech Stack
+
+### Frontend
+- React.js
+- Vite
+- Tailwind CSS
+
+### Backend
+- FastAPI
+- Python
+
+### AI / Processing
+- Transformers
+- OCR
+- PyMuPDF
+- PDFPlumber
+
+### Database
+- SQLite / PostgreSQL
+
+---
+
+## Project Structure
+
+```bash
+PrivacyShield/
+│
+├── backend/
+│   ├── main.py
+│   ├── analysis.py
+│   ├── routes/
+│   ├── models/
+│   └── requirements.txt
+│
+├── frontend/
+│   ├── src/
+│   ├── public/
+│   └── package.json
+│
+├── README.md
+└── .gitignore
