@@ -1,0 +1,96 @@
+services:
+  # 1. PostgreSQL Database
+  - type: database
+    name: privacyshield-db
+    databaseName: privacyshield
+    user: dbadmin
+    plan: free
+
+  # 2. Redis for caching & Celery broker
+  - type: redis
+    name: privacyshield-redis
+    plan: free
+    ipAllowList: [] # Internal-only access
+
+  # 3. AI Service (Python with Tesseract & spaCy)
+  - type: web
+    name: privacyshield-ai-service
+    env: python
+    plan: starter
+    rootDir: ai-services
+    buildCommand: pip install -r requirements.txt && python -m spacy download en_core_web_sm
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PORT
+        value: 8001
+      - key: ENABLE_GPU_INFERENCE
+        value: "false"
+
+  # 4. FastAPI Backend API Service
+  - type: web
+    name: privacyshield-backend
+    env: python
+    plan: starter
+    rootDir: apps/backend
+    buildCommand: pip install -r requirements.txt && alembic upgrade head
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: privacyshield-db
+          property: connectionString
+      - key: REDIS_URL
+        fromRedis:
+          name: privacyshield-redis
+          property: connectionString
+      - key: AI_SERVICE_URL
+        fromService:
+          type: web
+          name: privacyshield-ai-service
+          property: host
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: ENVIRONMENT
+        value: production
+
+  # 5. Celery Worker (Background tasks processing)
+  - type: worker
+    name: privacyshield-worker
+    env: python
+    plan: starter
+    rootDir: apps/backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: celery -A app.core.celery_app worker --loglevel=info
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: privacyshield-db
+          property: connectionString
+      - key: REDIS_URL
+        fromRedis:
+          name: privacyshield-redis
+          property: connectionString
+
+  # 6. Web Frontend Application (Vite React/TS)
+  - type: web
+    name: privacyshield-web
+    env: static
+    plan: free
+    rootDir: apps/web
+    buildCommand: npm install && npm run build
+    publishDir: dist
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: privacyshield-backend
+          property: url
