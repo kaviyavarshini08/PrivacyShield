@@ -1,0 +1,62 @@
+# Production Environment Configuration Overlays for PrivacyShield
+global:
+  environment: production
+
+api:
+  replicaCount: 4
+  rollingUpdate:
+    maxSurge: "25%"
+    maxUnavailable: 0
+  resources:
+    limits:
+      cpu: "2000m"
+      memory: "2Gi"
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+  env:
+    EMBEDDING_PROVIDER: "openai" # Use OpenAI for premium high-concurrency production semantic search
+    ENABLE_GPU_INFERENCE: "false"
+
+aiService:
+  replicaCount: 2
+  rollingUpdate:
+    maxSurge: 1
+    maxUnavailable: 0
+  resources:
+    limits:
+      cpu: "4000m"
+      memory: "4Gi"
+    requests:
+      cpu: "1000m"
+      memory: "2Gi"
+  # In production, enable GPU for high-speed Presidio scans if GPU pool is configured
+  env:
+    ENABLE_GPU_INFERENCE: "true"
+    LOCAL_MODEL_DEVICE: "cuda"
+
+celeryWorker:
+  replicaCount: 3
+  resources:
+    limits:
+      cpu: "2000m"
+      memory: "2Gi"
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-production"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  hosts:
+    - host: app.privacyshield.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: privacyshield-tls-prod
+      hosts:
+        - app.privacyshield.com

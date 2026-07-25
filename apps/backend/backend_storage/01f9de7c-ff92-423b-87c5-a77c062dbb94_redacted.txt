@@ -1,0 +1,15 @@
+MEMORANDUM: SENSITIVE COMPLIANCE AUDIT FILE
+
+Date: 2026-05-30
+Subject: Financial Transactions Verification PII Review
+
+Please review and verify the following customer details before clearing them for standard database backups:
+
+1. Customer ID Verification:
+   - Account Owner: [REDACTED]
+   - Aadhaar Card Number: [REDACTED]
+   - Tax Account (PAN Card): [REDACTED]
+   - Contact Mobile: [REDACTED]
+   - Billing Location: [REDACTED], [REDACTED]
+
+Ensure all Aadhaar and PAN Card coordinates are masked in logs to avoid GDPR/HIPAA compliance drifts.

@@ -1,0 +1,15 @@
+MEMORANDUM: SENSITIVE COMPLIANCE AUDIT FILE
+
+Date: 2026-05-30
+Subject: Financial Transactions Verification PII Review
+
+Please review and verify the following customer details before clearing them for standard database backups:
+
+1. Customer ID Verification:
+   - Account Owner: Rajesh Kumar
+   - Aadhaar Card Number: 4321 8765 0987
+   - Tax Account (PAN Card): DFJKP9876C
+   - Contact Mobile: +91 9448855220
+   - Billing Location: Delhi, India
+
+Ensure all Aadhaar and PAN Card coordinates are masked in logs to avoid GDPR/HIPAA compliance drifts.

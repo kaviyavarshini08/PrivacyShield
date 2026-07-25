@@ -1,0 +1,6 @@
+apiVersion: v2
+name: privacyshield
+description: A Helm chart for deploying the PrivacyShield cybersecurity & AI sensitive data protection SaaS platform.
+type: application
+version: 1.0.0
+appVersion: "1.0.0"

@@ -1,0 +1,11 @@
+PATIENT INTAKE RECORD - RESTRICTED PHI / HIPAA DATA
+
+Patient Name: Sarah Jenkins
+Date of Birth: 1988-11-23
+Social Security Number (SSN): 666-29-9182
+Primary Contact Email: sarah.jenkins@healthmail.net
+Contact Number: +1 415-555-2671
+Medical File ID: US-PHI-89274-A
+
+Patient diagnosed with seasonal asthma. Prescribed standard Albuterol inhaler. Next check-in scheduled for November 2026.
+Verify that SSN and email strings are fully redacted before syncing to external billing nodes.

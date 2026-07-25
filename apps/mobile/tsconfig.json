@@ -1,0 +1,16 @@
+{
+  "extends": "../../node_modules/expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@privacyshield/shared": ["../../packages/shared/src"],
+      "@privacyshield/shared/*": ["../../packages/shared/src/*"],
+      "@privacyshield/ui": ["../../packages/ui/src"],
+      "@privacyshield/ui/*": ["../../packages/ui/src/*"]
+    },
+    "skipLibCheck": true,
+    "jsx": "react-native"
+  }
+}

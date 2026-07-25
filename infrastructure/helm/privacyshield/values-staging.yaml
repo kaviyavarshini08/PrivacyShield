@@ -1,0 +1,49 @@
+# Staging Environment Configuration Overlays for PrivacyShield
+global:
+  environment: staging
+
+api:
+  replicaCount: 2
+  resources:
+    limits:
+      cpu: "1000m"
+      memory: "1Gi"
+    requests:
+      cpu: "250m"
+      memory: "512Mi"
+  env:
+    EMBEDDING_PROVIDER: "local"
+    ENABLE_GPU_INFERENCE: "false"
+    LOCAL_MODEL_DEVICE: "cpu"
+
+aiService:
+  replicaCount: 1
+  resources:
+    limits:
+      cpu: "2000m"
+      memory: "2Gi"
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+  env:
+    ENABLE_GPU_INFERENCE: "false"
+    LOCAL_MODEL_DEVICE: "cpu"
+
+celeryWorker:
+  replicaCount: 1
+  resources:
+    limits:
+      cpu: "1000m"
+      memory: "1Gi"
+    requests:
+      cpu: "250m"
+      memory: "512Mi"
+
+ingress:
+  enabled: true
+  className: "nginx"
+  hosts:
+    - host: staging.privacyshield.local
+      paths:
+        - path: /
+          pathType: Prefix

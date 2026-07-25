@@ -1,0 +1,14 @@
+{{- if .Values.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "privacyshield.fullname" . }}-pvc
+spec:
+  accessModes:
+    # ReadWriteMany is required for multiple pods (API, Worker, AI) to mount the same storage volume
+    - ReadWriteMany
+  storageClassName: {{ .Values.persistence.storageClass | quote }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.size | quote }}
+{{- end }}

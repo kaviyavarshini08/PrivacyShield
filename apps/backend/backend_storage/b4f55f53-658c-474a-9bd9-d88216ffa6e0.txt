@@ -1,0 +1,14 @@
+# PRIVACYSHIELD CORPORATE DEVELOPMENT CONFIGURATION
+
+WARNING: DO NOT CHECK THIS FILE INTO PUBLIC GIT WORKSPACES.
+
+AWS Credentials:
+  AWS_ACCESS_KEY_ID = AKIAIOSFODNN7EXAMPLE
+  AWS_SECRET_ACCESS_KEY = wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+  DEFAULT_REGION = us-east-1
+
+Slack Webhook Endpoint:
+  SLACK_WEBHOOK_URL = https://hooks.slack.com/services/T00000000/B00000000/REDACTED_WEBHOOK_TOKEN
+
+PostgreSQL connection parameters:
+  DATABASE_URL = postgresql://admin_user:SuperSecretAdminPass123!@production-db.company.com:5432/main_prod

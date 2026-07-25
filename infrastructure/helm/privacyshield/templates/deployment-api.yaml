@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "privacyshield.fullname" . }}-api
+  labels:
+    app: {{ include "privacyshield.fullname" . }}-api
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "privacyshield.fullname" . }}-api
+  template:
+    metadata:
+      labels:
+        app: {{ include "privacyshield.fullname" . }}-api
+    spec:
+      containers:
+        - name: api
+          image: "{{ .Values.image.api.repository }}:{{ .Values.image.api.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.api.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          env:
+            - name: POSTGRES_SERVER
+              value: "{{ .Values.env.postgresServer }}"
+            - name: POSTGRES_USER
+              value: "{{ .Values.env.postgresUser }}"
+            - name: POSTGRES_DB
+              value: "{{ .Values.env.postgresDb }}"
+            - name: REDIS_URL
+              value: "{{ .Values.env.redisUrl }}"
+            - name: AI_SERVICE_URL
+              value: "{{ .Values.env.aiServiceUrl }}"
+            - name: ALLOWED_ORIGINS
+              value: "{{ .Values.env.allowedOrigins }}"
+            - name: UPLOAD_DIR
+              value: "{{ .Values.persistence.mountPath }}"
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "privacyshield.fullname" . }}-secrets
+                  key: postgres-password
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "privacyshield.fullname" . }}-secrets
+                  key: jwt-secret-key
+          livenessProbe:
+            httpGet:
+              path: /health/liveness
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health/readiness
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: storage-volume
+              mountPath: {{ .Values.persistence.mountPath }}
+      volumes:
+        - name: storage-volume
+          {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "privacyshield.fullname" . }}-pvc
+          {{- else }}
+          emptyDir: {}
+          {{- end }}

@@ -1,0 +1,94 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: privacyshield-db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: privacyshield
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: privacyshield-redis
+    restart: always
+    ports:
+      - "6379:6379"
+
+  api:
+    build:
+      context: ./apps/backend
+      dockerfile: Dockerfile
+    container_name: privacyshield-api
+    restart: always
+    environment:
+      - POSTGRES_SERVER=db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=privacyshield
+      - REDIS_URL=redis://redis:6379/0
+      - UPLOAD_DIR=/workspace/backend_storage
+      - AI_SERVICE_URL=http://ai-service:8001
+      - ALLOWED_ORIGINS=http://localhost:5173,http://localhost:8080,http://localhost:8081
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - shared_storage:/workspace/backend_storage
+
+  celery_worker:
+    build:
+      context: ./apps/backend
+      dockerfile: Dockerfile
+    container_name: privacyshield-worker
+    command: celery -A app.services.celery.celery_app worker --loglevel=info
+    restart: always
+    environment:
+      - POSTGRES_SERVER=db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=privacyshield
+      - REDIS_URL=redis://redis:6379/0
+      - UPLOAD_DIR=/workspace/backend_storage
+      - AI_SERVICE_URL=http://ai-service:8001
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - shared_storage:/workspace/backend_storage
+
+  ai-service:
+    build:
+      context: ./ai-services
+      dockerfile: Dockerfile
+    container_name: privacyshield-ai-service
+    restart: always
+    ports:
+      - "8001:8001"
+    environment:
+      - UPLOAD_DIR=/workspace/backend_storage
+    volumes:
+      - shared_storage:/workspace/backend_storage
+
+  web:
+    build:
+      context: .
+      dockerfile: ./apps/web/Dockerfile
+    container_name: privacyshield-web
+    restart: always
+    ports:
+      - "8081:80"
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:
+  shared_storage:

@@ -1,0 +1,169 @@
+Starting import_main test script on port 8002...
+uvicorn imported
+main imported successfully!
+Starting uvicorn server on port 8002...
+INFO:     Started server process [4676]
+INFO:     Waiting for application startup.
+INFO:main:Local embeddings executing on device: cpu
+INFO:main:Loading sentence-transformers/all-MiniLM-L6-v2 model...
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json "HTTP/1.1 307 Temporary Redirect"
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+WARNING:huggingface_hub.utils._http:Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/modules.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/config_sentence_transformers.json "HTTP/1.1 200 OK"
+INFO:sentence_transformers.base.model:Loading SentenceTransformer model from sentence-transformers/all-MiniLM-L6-v2.
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/config_sentence_transformers.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/README.md "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/modules.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/sentence_bert_config.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/sentence_bert_config.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/adapter_config.json "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/config.json "HTTP/1.1 200 OK"
+Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights: 100%|##########| 103/103 [00:00<00:00, 7013.32it/s]
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/processor_config.json "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/preprocessor_config.json "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/video_preprocessor_config.json "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/preprocessor_config.json "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/tokenizer_config.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/config.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/config.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/tokenizer_config.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/1_Pooling/config.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/1_Pooling%2Fconfig.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2 "HTTP/1.1 200 OK"
+INFO:main:Embedding model loaded successfully.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8002 (Press CTRL+C to quit)
+INFO:src.providers.manager:Initializing active PII scanner provider: presidio
+WARNING:presidio-analyzer:Entity CARDINAL is not mapped to a Presidio entity, but keeping anyway. Add to `NerModelConfiguration.labels_to_ignore` to remove.
+WARNING:presidio-analyzer:Entity CARDINAL is not mapped to a Presidio entity, but keeping anyway. Add to `NerModelConfiguration.labels_to_ignore` to remove.
+WARNING:presidio-analyzer:Entity PRODUCT is not mapped to a Presidio entity, but keeping anyway. Add to `NerModelConfiguration.labels_to_ignore` to remove.
+INFO:     127.0.0.1:56766 - "POST /api/v1/analyze HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00,  5.83it/s]Batches: 100%|##########| 1/1 [00:00<00:00,  5.82it/s]
+INFO:     127.0.0.1:56770 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 41.24it/s]
+INFO:     127.0.0.1:56772 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 36.65it/s]
+INFO:     127.0.0.1:56774 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 61.35it/s]
+INFO:     127.0.0.1:56776 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 50.42it/s]
+INFO:     127.0.0.1:56778 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 58.83it/s]
+INFO:     127.0.0.1:56780 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 43.94it/s]
+INFO:     127.0.0.1:56782 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 66.38it/s]
+INFO:     127.0.0.1:56784 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 54.09it/s]
+INFO:     127.0.0.1:56786 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 52.85it/s]
+INFO:     127.0.0.1:56788 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 68.66it/s]
+INFO:     127.0.0.1:56790 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 63.20it/s]
+INFO:     127.0.0.1:56792 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 46.21it/s]
+INFO:     127.0.0.1:56794 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 65.22it/s]
+INFO:     127.0.0.1:56796 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 57.48it/s]
+INFO:     127.0.0.1:56798 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 50.19it/s]
+INFO:     127.0.0.1:56800 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 50.51it/s]
+INFO:     127.0.0.1:56802 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 50.87it/s]
+INFO:     127.0.0.1:56804 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+WARNING:presidio-analyzer:Entity CARDINAL is not mapped to a Presidio entity, but keeping anyway. Add to `NerModelConfiguration.labels_to_ignore` to remove.
+WARNING:presidio-analyzer:Entity CARDINAL is not mapped to a Presidio entity, but keeping anyway. Add to `NerModelConfiguration.labels_to_ignore` to remove.
+WARNING:presidio-analyzer:Entity PRODUCT is not mapped to a Presidio entity, but keeping anyway. Add to `NerModelConfiguration.labels_to_ignore` to remove.
+INFO:     127.0.0.1:53804 - "POST /api/v1/analyze HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 23.72it/s]
+INFO:     127.0.0.1:53808 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 55.33it/s]
+INFO:     127.0.0.1:53810 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 62.26it/s]
+INFO:     127.0.0.1:53812 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 58.40it/s]
+INFO:     127.0.0.1:53814 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 63.08it/s]
+INFO:     127.0.0.1:53816 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 63.82it/s]
+INFO:     127.0.0.1:53818 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 66.12it/s]
+INFO:     127.0.0.1:53820 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 64.20it/s]
+INFO:     127.0.0.1:53822 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 61.08it/s]
+INFO:     127.0.0.1:53824 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 72.74it/s]
+INFO:     127.0.0.1:53826 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 52.68it/s]
+INFO:     127.0.0.1:53828 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 62.12it/s]
+INFO:     127.0.0.1:53830 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 54.84it/s]
+INFO:     127.0.0.1:53832 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 47.01it/s]
+INFO:     127.0.0.1:53834 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 63.47it/s]
+INFO:     127.0.0.1:53836 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 67.66it/s]
+INFO:     127.0.0.1:53838 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 79.48it/s]
+INFO:     127.0.0.1:53841 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 10.97it/s]
+INFO:     127.0.0.1:53843 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54132 - "POST /api/v1/redact HTTP/1.1" 200 OK
+WARNING:presidio-analyzer:Entity CARDINAL is not mapped to a Presidio entity, but keeping anyway. Add to `NerModelConfiguration.labels_to_ignore` to remove.
+WARNING:presidio-analyzer:Entity CARDINAL is not mapped to a Presidio entity, but keeping anyway. Add to `NerModelConfiguration.labels_to_ignore` to remove.
+WARNING:presidio-analyzer:Entity PRODUCT is not mapped to a Presidio entity, but keeping anyway. Add to `NerModelConfiguration.labels_to_ignore` to remove.
+INFO:     127.0.0.1:54173 - "POST /api/v1/analyze HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 25.50it/s]
+INFO:     127.0.0.1:54177 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 63.46it/s]
+INFO:     127.0.0.1:54179 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 48.29it/s]
+INFO:     127.0.0.1:54181 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 54.59it/s]
+INFO:     127.0.0.1:54183 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 55.49it/s]
+INFO:     127.0.0.1:54185 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 60.60it/s]
+INFO:     127.0.0.1:54187 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 46.93it/s]
+INFO:     127.0.0.1:54189 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 61.20it/s]
+INFO:     127.0.0.1:54191 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 61.28it/s]
+INFO:     127.0.0.1:54193 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 52.06it/s]
+INFO:     127.0.0.1:54195 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 64.53it/s]
+INFO:     127.0.0.1:54197 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 47.07it/s]
+INFO:     127.0.0.1:54199 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 47.65it/s]
+INFO:     127.0.0.1:54201 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 61.35it/s]
+INFO:     127.0.0.1:54203 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 71.45it/s]
+INFO:     127.0.0.1:54205 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 73.32it/s]
+INFO:     127.0.0.1:54207 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 73.53it/s]
+INFO:     127.0.0.1:54209 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|##########| 1/1 [00:00<00:00, 86.24it/s]
+INFO:     127.0.0.1:54211 - "POST /api/v1/embeddings HTTP/1.1" 200 OK
