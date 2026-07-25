@@ -74,11 +74,11 @@ services:
   # 6. Web Frontend Application (Vite React/TS)
   - type: web
     name: privacyshield-web
-    env: static
+    runtime: static
     plan: free
     rootDir: apps/web
     buildCommand: npm install && npm run build
-    publishDir: dist
+    staticPublishPath: dist
     headers:
       - path: /*
         name: Cache-Control
