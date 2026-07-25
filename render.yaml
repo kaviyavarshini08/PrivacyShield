@@ -40,7 +40,8 @@ services:
           name: privacyshield-db
           property: connectionString
       - key: REDIS_URL
-        fromRedis:
+        fromService:
+          type: redis
           name: privacyshield-redis
           property: connectionString
       - key: AI_SERVICE_URL
@@ -67,7 +68,8 @@ services:
           name: privacyshield-db
           property: connectionString
       - key: REDIS_URL
-        fromRedis:
+        fromService:
+          type: redis
           name: privacyshield-redis
           property: connectionString
 
@@ -89,7 +91,4 @@ services:
         destination: /index.html
     envVars:
       - key: VITE_API_URL
-        fromService:
-          type: web
-          name: privacyshield-backend
-          property: url
+        value: https://privacyshield-backend.onrender.com/api/v1
