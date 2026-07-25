@@ -1,11 +1,10 @@
-services:
-  # 1. PostgreSQL Database
-  - type: database
-    name: privacyshield-db
+databases:
+  - name: privacyshield-db
     databaseName: privacyshield
     user: dbadmin
     plan: free
 
+services:
   # 2. Redis for caching & Celery broker
   - type: redis
     name: privacyshield-redis
