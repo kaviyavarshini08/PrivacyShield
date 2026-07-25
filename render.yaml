@@ -17,7 +17,7 @@ services:
     env: python
     plan: free
     rootDir: ai-services
-    buildCommand: pip install -r requirements.txt && python -m spacy download en_core_web_sm
+    buildCommand: pip install --no-cache-dir -r requirements.txt && python -m spacy download en_core_web_sm
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PORT
@@ -31,7 +31,7 @@ services:
     env: python
     plan: free
     rootDir: apps/backend
-    buildCommand: pip install -r requirements.txt && alembic upgrade head
+    buildCommand: pip install --no-cache-dir -r requirements.txt && alembic upgrade head
     startCommand: celery -A app.services.celery worker --loglevel=info & uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     envVars:
