@@ -31,8 +31,8 @@ services:
     env: python
     plan: free
     rootDir: apps/backend
-    buildCommand: pip install --no-cache-dir -r requirements.txt && alembic upgrade head
-    startCommand: celery -A app.services.celery worker --loglevel=info & uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    buildCommand: pip install --no-cache-dir -r requirements.txt
+    startCommand: alembic upgrade head && celery -A app.services.celery worker --loglevel=info & uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     envVars:
       - key: DATABASE_URL
