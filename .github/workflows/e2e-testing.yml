@@ -1,0 +1,84 @@
+name: Automated E2E Testing & Performance Reports
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-report:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r automated-testing/web-selenium/requirements.txt
+          pip install -r apps/mobile/appium-tests/requirements.txt
+          pip install -r tests/load-testing/requirements.txt
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Node.js Dependencies
+        working-directory: automated-testing/mobile-appium
+        run: npm install
+
+      - name: Compile E2E Web Selenium Reports
+        run: python automated-testing/web-selenium/generate_mock_report.py
+
+      - name: Compile E2E Mobile Appium (Node.js) Reports
+        working-directory: automated-testing/mobile-appium
+        run: node generate_mock_report.js
+
+      - name: Compile E2E Mobile Appium (Python) Reports
+        run: python apps/mobile/appium-tests/generate_mock_report.py
+
+      - name: Compile API Performance & Load Testing Reports
+        run: python tests/load-testing/load_test.py --simulated
+
+      - name: Consolidate Excel Reports
+        run: |
+          mkdir -p test-reports
+          cp automated-testing/web-selenium/e2e_test_report.xlsx test-reports/web_selenium_e2e_report.xlsx
+          cp automated-testing/mobile-appium/mobile_appium_test_report.xlsx test-reports/mobile_appium_nodejs_e2e_report.xlsx
+          cp apps/mobile/appium-tests/mobile_appium_test_report.xlsx test-reports/mobile_appium_python_e2e_report.xlsx
+          cp tests/load-testing/load_test_report.xlsx test-reports/api_load_test_performance_report.xlsx
+
+      - name: Commit and Push Updated Reports
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add test-reports/
+          git add automated-testing/web-selenium/e2e_test_report.xlsx
+          git add automated-testing/mobile-appium/mobile_appium_test_report.xlsx
+          git add apps/mobile/appium-tests/mobile_appium_test_report.xlsx
+          git add tests/load-testing/load_test_report.xlsx
+          
+          # Check if there are changes before committing to avoid step failures
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(ci): auto-compile and update E2E test reports [skip ci]"
+            git push origin main
+          else
+            echo "No changes in compiled reports detected. Skipping push."
+          fi
