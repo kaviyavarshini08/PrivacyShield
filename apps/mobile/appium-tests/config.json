@@ -1,0 +1,9 @@
+{
+  "app_path": "apps/mobile/build/app-release.apk",
+  "device_name": "Android Emulator",
+  "platform_name": "Android",
+  "platform_version": "13.0",
+  "automation_name": "UiAutomator2",
+  "appium_server_url": "http://localhost:4723",
+  "output_report": "mobile_appium_test_report.xlsx"
+}
