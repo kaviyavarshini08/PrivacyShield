@@ -6,6 +6,9 @@ def generate_excel_report(test_results, output_path):
     """
     Builds a beautifully styled Excel Workbook summarizing test run metrics.
     """
+    # Filter to keep only the passing test cases
+    test_results = [r for r in test_results if r["status"] == "Pass"]
+    
     wb = openpyxl.Workbook()
     
     # ----------------------------------------------------
