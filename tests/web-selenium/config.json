@@ -1,0 +1,7 @@
+{
+  "base_url": "https://privacyshield-web.onrender.com",
+  "api_url": "https://privacyshield-backend-awon.onrender.com/api/v1",
+  "headless": true,
+  "implicit_wait": 10,
+  "output_report": "e2e_test_report.xlsx"
+}

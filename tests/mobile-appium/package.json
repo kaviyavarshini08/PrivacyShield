@@ -1,0 +1,15 @@
+{
+  "name": "privacyshield-mobile-appium",
+  "version": "1.0.0",
+  "description": "Appium E2E Mobile Automation Suite for PrivacyShield mobile client",
+  "scripts": {
+    "test": "wdio run wdio.conf.js"
+  },
+  "dependencies": {
+    "@wdio/cli": "^8.32.4",
+    "@wdio/local-runner": "^8.32.4",
+    "@wdio/mocha-framework": "^8.32.2",
+    "@wdio/spec-reporter": "^8.32.2",
+    "webdriverio": "^8.32.4"
+  }
+}
