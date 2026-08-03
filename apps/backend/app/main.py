@@ -119,6 +119,10 @@ app.include_router(teams.router, prefix=f"{settings.API_V1_STR}/teams", tags=["T
 app.include_router(billing.router, prefix=f"{settings.API_V1_STR}/billing", tags=["Stripe Billing"])
 
 # 7. Health Check Probes
+@app.get("/health", tags=["Health Checks"])
+def health():
+    return {"status": "healthy"}
+
 @app.get("/health/liveness", tags=["Health Checks"])
 def liveness():
     """Liveness probe: verifies that the python process is alive."""
