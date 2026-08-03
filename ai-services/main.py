@@ -19,31 +19,8 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="PrivacyShield AI-Services Microservice", version="1.0.0")
 
-# Embedding Model Global Initialization
+# Embedding Model Global Initialization (loaded lazily on demand)
 embedding_model = None
-
-@app.on_event("startup")
-def load_embedding_model():
-    global embedding_model
-    try:
-        enable_gpu = os.getenv("ENABLE_GPU_INFERENCE", "false").lower() == "true"
-        device_env = os.getenv("LOCAL_MODEL_DEVICE", "cpu").lower()
-        
-        device = "cpu"
-        if enable_gpu and torch.cuda.is_available():
-            device = "cuda"
-            logger.info("CUDA GPU support detected! Enabling GPU acceleration for local embeddings.")
-        elif device_env == "cuda" and torch.cuda.is_available():
-            device = "cuda"
-            logger.info("LOCAL_MODEL_DEVICE set to cuda and support detected! Enabling GPU.")
-        else:
-            logger.info(f"Local embeddings executing on device: {device}")
-            
-        logger.info("Loading sentence-transformers/all-MiniLM-L6-v2 model...")
-        embedding_model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2", device=device)
-        logger.info("Embedding model loaded successfully.")
-    except Exception as e:
-        logger.error(f"Failed to load sentence-transformers embedding model: {e}")
 
 class EmbeddingsRequest(BaseModel):
     texts: List[str]
