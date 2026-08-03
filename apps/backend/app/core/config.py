@@ -20,11 +20,22 @@ class Settings(BaseSettings):
     
     @property
     def SQLALCHEMY_DATABASE_URI(self) -> str:
+        db_url = os.getenv("DATABASE_URL")
+        if db_url:
+            if db_url.startswith("postgres://"):
+                return db_url.replace("postgres://", "postgresql+asyncpg://", 1)
+            elif db_url.startswith("postgresql://"):
+                return db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+            return db_url
         return f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}/{self.POSTGRES_DB}"
     
     @property
     def SYNC_DATABASE_URI(self) -> str:
-        # Needed for Alembic migrations and Celery (which might run synchronously)
+        db_url = os.getenv("DATABASE_URL")
+        if db_url:
+            if db_url.startswith("postgres://"):
+                return db_url.replace("postgres://", "postgresql://", 1)
+            return db_url
         return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}/{self.POSTGRES_DB}"
 
     # Redis Connection
@@ -49,6 +60,11 @@ class Settings(BaseSettings):
     EMBEDDING_PROVIDER: str = os.getenv("EMBEDDING_PROVIDER", "local") # 'local' or 'openai'
     ENABLE_GPU_INFERENCE: bool = os.getenv("ENABLE_GPU_INFERENCE", "false").lower() == "true"
     LOCAL_MODEL_DEVICE: str = os.getenv("LOCAL_MODEL_DEVICE", "cpu")
+
+    def __init__(self, **values):
+        super().__init__(**values)
+        if not self.AI_SERVICE_URL.startswith("http://") and not self.AI_SERVICE_URL.startswith("https://"):
+            self.AI_SERVICE_URL = f"http://{self.AI_SERVICE_URL}"
 
     class Config:
         case_sensitive = True
