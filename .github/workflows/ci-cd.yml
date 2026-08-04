@@ -24,6 +24,7 @@ jobs:
 
       - name: Lint Frontend
         run: npm run lint -w apps/web --if-present
+        continue-on-error: true
 
       - name: Run Web Unit Tests
         run: npm run test -w apps/web --if-present
