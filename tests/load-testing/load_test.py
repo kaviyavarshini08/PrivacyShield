@@ -14,9 +14,13 @@ try:
     config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "web-selenium", "config.json")
     with open(config_path, "r") as f:
         config = json.load(f)
-    default_target = config.get("api_url", "https://privacyshield-backend-awon.onrender.com/api/v1") + "/health/readiness"
+    api_url = config.get("api_url", "https://privacyshield-backend-awon.onrender.com/api/v1")
+    if "/api/v1" in api_url:
+        default_target = api_url.replace("/api/v1", "") + "/health/readiness"
+    else:
+        default_target = api_url + "/health/readiness"
 except Exception:
-    default_target = "https://privacyshield-backend-awon.onrender.com/api/v1/health/readiness"
+    default_target = "https://privacyshield-backend-awon.onrender.com/health/readiness"
 
 def build_excel_report(summary, request_logs, output_path):
     """
