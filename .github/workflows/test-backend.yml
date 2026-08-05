@@ -1,0 +1,35 @@
+name: Test - Backend Unit & Security
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Install Backend Dependencies
+        run: |
+          cd apps/backend
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install bandit safety
+
+      - name: Run Python SAST Scan (Bandit)
+        run: bandit -r apps/backend -ll -x **/__pycache__**,**/tests**
+
+      - name: Run Pytest Suite
+        run: |
+          cd apps/backend
+          python -m pytest
