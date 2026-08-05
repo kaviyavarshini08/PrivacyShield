@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { TextInput, Text, Card, HelperText, IconButton, ActivityIndicator } from 'react-native-paper';
 import { useRouter } from 'expo-router';
-import { useAuthStore } from '../src/store/authStore';
+import { useAuthStore, API_URL } from '../src/store/authStore';
 import { CyberButton, GlassCard } from '@privacyshield/ui';
+import axios from 'axios';
 
 const onboardingSlides = [
   {
@@ -30,6 +31,11 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [mfaCode, setMfaCode] = useState('');
+  
+  // Recovery / Password reset states
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
   
   // Onboarding & Biometrics States
   const [showOnboarding, setShowOnboarding] = useState(true);
@@ -194,26 +200,12 @@ export default function Login() {
               style={[styles.button, { marginTop: 12 }]}
             />
 
-            <View style={styles.dividerContainer}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>OR SIGN IN WITH</Text>
-              <View style={styles.dividerLine} />
-            </View>
-
-            <View style={styles.oauthRow}>
-              <CyberButton
-                title="Google"
-                onPress={() => handleOAuthMock('google')}
-                variant="secondary"
-                style={styles.oauthButton}
-              />
-              <CyberButton
-                title="GitHub"
-                onPress={() => handleOAuthMock('github')}
-                variant="secondary"
-                style={styles.oauthButton}
-              />
-            </View>
+            <CyberButton
+              title="Forgot Passphrase?"
+              onPress={() => setShowForgotPassword(true)}
+              variant="secondary"
+              style={[styles.button, { marginTop: 12 }]}
+            />
           </GlassCard>
         ) : (
           <GlassCard style={styles.card}>
@@ -282,6 +274,58 @@ export default function Login() {
                 style={{ marginTop: 20 }}
               />
             )}
+          </GlassCard>
+        </View>
+      )}
+
+      {/* Recovery Password Modal Overlay */}
+      {showForgotPassword && (
+        <View style={styles.biometricOverlay}>
+          <GlassCard style={styles.biometricCard}>
+            <Text style={styles.biometricTitle}>RESET PASSPHRASE</Text>
+            
+            <Text style={[styles.mfaInfo, { marginBottom: 16, fontSize: 13 }]}>
+              Enter your security ID to receive a temporary recovery passcode.
+            </Text>
+
+            <TextInput
+              label="Recovery Email"
+              value={resetEmail}
+              onChangeText={setResetEmail}
+              mode="outlined"
+              autoCapitalize="none"
+              style={[styles.input, { width: '100%', marginBottom: 12 }]}
+              textColor="#ffffff"
+            />
+
+            <CyberButton
+              title="Request Passcode"
+              onPress={async () => {
+                if (!resetEmail) {
+                  alert("Please enter a recovery email");
+                  return;
+                }
+                setResetLoading(true);
+                try {
+                  const res = await axios.post(`${API_URL}/auth/forgot-password`, { email: resetEmail });
+                  alert(`Recovery Passcode Issued!\n\nUse temporary passphrase to authenticate: ${res.data.temp_password}`);
+                  setShowForgotPassword(false);
+                } catch (err: any) {
+                  alert(err.response?.data?.detail || "Passphrase reset failed. Make sure the email exists.");
+                } finally {
+                  setResetLoading(false);
+                }
+              }}
+              loading={resetLoading}
+              style={{ width: '100%', marginTop: 8 }}
+            />
+
+            <CyberButton
+              title="Cancel"
+              variant="secondary"
+              onPress={() => setShowForgotPassword(false)}
+              style={{ width: '100%', marginTop: 12 }}
+            />
           </GlassCard>
         </View>
       )}

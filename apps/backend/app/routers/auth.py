@@ -351,3 +351,44 @@ async def verify_mfa_setup(
     await db.commit()
     
     return {"message": "MFA enabled successfully"}
+
+from pydantic import BaseModel
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+@router.post("/forgot-password")
+async def forgot_password(req: ForgotPasswordRequest, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(User).filter(User.email == req.email))
+    user = result.scalars().first()
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="Email address not found"
+        )
+        
+    # Reset password to a temporary one: "reset123"
+    temp_password = "reset123"
+    user.hashed_password = get_password_hash(temp_password)
+    db.add(user)
+    
+    # Audit log
+    audit = AuditLog(
+        user_id=user.id,
+        organization_id=user.organization_id,
+        action="USER_PASSWORD_RESET_REQUEST",
+        target=user.email,
+        severity="medium"
+    )
+    db.add(audit)
+    await db.commit()
+    
+    # Print/log the email sending simulation
+    print(f"\n[EMAIL SIMULATOR] Sending password reset email to: {user.email}")
+    print(f"[EMAIL SIMULATOR] Subject: PrivacyShield Password Reset")
+    print(f"[EMAIL SIMULATOR] Body: Hello {user.full_name}, your password has been reset. Please use your temporary password to log in: {temp_password}\n")
+    
+    return {
+        "status": "success",
+        "message": f"Password reset email sent to {user.email}",
+        "temp_password": temp_password
+    }
