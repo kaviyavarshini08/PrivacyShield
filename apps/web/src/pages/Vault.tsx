@@ -9,10 +9,6 @@ export function Vault() {
   const [vaultData, setVaultData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    fetchVaultItems();
-  }, []);
-
   const fetchVaultItems = async () => {
     try {
       const response = await DocumentService.getVaultItems();
@@ -23,7 +19,11 @@ export function Vault() {
       setIsLoading(false);
     }
   };
+useEffect(() => {
+    fetchVaultItems();
+  }, []);
 
+  
   const handleDownload = (id: string) => {
     window.open(AnalysisService.getDownloadUrl(id), '_blank');
   };
