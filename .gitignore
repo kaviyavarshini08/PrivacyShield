@@ -33,3 +33,9 @@ venv/
 # E2E Web reports
 tests/web-selenium/e2e_test_report.xlsx
 tests/web-selenium/__pycache__/
+
+# Expo
+.expo/
+
+# Excel temporary lock files
+~$*
