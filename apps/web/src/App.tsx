@@ -6,7 +6,7 @@ import { Toaster } from 'sonner';
 
 function App() {
   return (
-    <ThemeProvider defaultTheme="system" storageKey="privacy-shield-theme">
+    <ThemeProvider>
       <AuthProvider>
         <BrowserRouter>
           <AppRoutes />

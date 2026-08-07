@@ -60,37 +60,12 @@ class TextSplitter:
 
 async def generate_embedding(text_to_embed: str) -> List[float]:
     """
-    Generates embedding vector for a given string.
-    Supports OpenAI (if EMBEDDING_PROVIDER=openai) and local sentence-transformers (fallback).
+    Generates embedding vector for a given string using the 100% local SentenceTransformers model.
     """
     if not text_to_embed.strip():
-        # Default 384 dimensions empty list
-        dim = 1536 if settings.EMBEDDING_PROVIDER == "openai" else 384
-        return [0.0] * dim
+        return [0.0] * 384
 
-    if settings.EMBEDDING_PROVIDER == "openai" and settings.OPENAI_API_KEY:
-        try:
-            logger.info("Generating embedding via OpenAI API...")
-            headers = {
-                "Authorization": f"Bearer {settings.OPENAI_API_KEY}",
-                "Content-Type": "application/json"
-            }
-            payload = {
-                "input": text_to_embed,
-                "model": "text-embedding-3-small"
-            }
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                res = await client.post("https://api.openai.com/v1/embeddings", headers=headers, json=payload)
-                
-            if res.status_code == 200:
-                data = res.json()
-                return data["data"][0]["embedding"]
-            else:
-                logger.error(f"OpenAI embedding failed: {res.status_code} - {res.text}. Falling back to local.")
-        except Exception as e:
-            logger.exception(f"OpenAI embedding generation failed: {e}. Falling back to local.")
-
-    # Local sentence-transformers fallback
+    # 100% Local sentence-transformers via local AI-Services microservice
     try:
         logger.info(f"Generating local embedding via AI-Services endpoint: {settings.AI_SERVICE_URL}")
         payload = {"texts": [text_to_embed]}
@@ -106,6 +81,7 @@ async def generate_embedding(text_to_embed: str) -> List[float]:
         logger.exception(f"Local embedding generation failed: {e}")
         # Return fallback zero vector of dimension 384
         return [0.0] * 384
+
 
 async def init_vector_extension(db: AsyncSession):
     """

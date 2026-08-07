@@ -2,9 +2,10 @@ name: E2E - Mobile Appium Tests
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, master, develop ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, master, develop ]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -59,8 +60,18 @@ jobs:
       - name: Update Mobile E2E Reports
         run: |
           mkdir -p test-reports
-          cp automated-testing/mobile-appium/mobile_appium_test_report.xlsx test-reports/mobile_appium_nodejs_e2e_report.xlsx
-          cp apps/mobile/appium-tests/mobile_appium_test_report.xlsx test-reports/mobile_appium_python_e2e_report.xlsx
+          if [ -f automated-testing/mobile-appium/mobile_appium_test_report.xlsx ]; then
+            cp automated-testing/mobile-appium/mobile_appium_test_report.xlsx test-reports/mobile_appium_nodejs_e2e_report.xlsx
+          fi
+          if [ -f apps/mobile/appium-tests/mobile_appium_test_report.xlsx ]; then
+            cp apps/mobile/appium-tests/mobile_appium_test_report.xlsx test-reports/mobile_appium_python_e2e_report.xlsx
+          fi
+
+      - name: Upload Mobile Appium Test Reports Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-appium-e2e-reports
+          path: test-reports/
 
       - name: Commit and Push Reports
         run: |

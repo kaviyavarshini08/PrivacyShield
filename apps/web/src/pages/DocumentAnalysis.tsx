@@ -4,7 +4,7 @@ import { AnalysisService } from '../services/api';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { DualPDFViewer } from '../components/DualPDFViewer';
-import { Shield, ArrowLeft, Loader2, FileText, CheckCircle2, AlertTriangle, Download, Share2, FileBarChart } from 'lucide-react';
+import { Shield, ArrowLeft, Loader2, FileText, CheckCircle2, AlertTriangle, Download, FileBarChart } from 'lucide-react';
 import { toast } from 'sonner';
 
 type Entity = {
@@ -66,19 +66,27 @@ export function DocumentAnalysis() {
     setSelectedEntities(newSelected);
   };
 
-  const handleApplyRedactions = async () => {
-    if (!id || selectedEntities.size === 0) {
-      toast.error('Please select at least one entity to redact.');
-      return;
+  const handleApplyRedactions = async (): Promise<string | null> => {
+    if (!id) return null;
+    let targetEntityIds = Array.from(selectedEntities);
+    if (targetEntityIds.length === 0) {
+      targetEntityIds = entities.filter(e => !e.is_redacted).map(e => e.id);
+    }
+    if (targetEntityIds.length === 0) {
+      toast.error('No entities available to redact.');
+      return null;
     }
     setRedacting(true);
     try {
-      const response = await AnalysisService.redactDocument(id, Array.from(selectedEntities));
-      setRedactedPath(response.data.redacted_path);
+      const response = await AnalysisService.redactDocument(id, targetEntityIds);
+      const newPath = response.data.redacted_path;
+      setRedactedPath(newPath);
       toast.success('Document secured successfully!');
       await loadAnalysis(id);
+      return newPath;
     } catch {
       toast.error('Failed to apply redactions. Please try again.');
+      return null;
     } finally {
       setRedacting(false);
     }
@@ -89,13 +97,17 @@ export function DocumentAnalysis() {
     window.open(AnalysisService.getAuditReportUrl(id as string), '_blank');
   };
 
-  const handleDownloadRedacted = () => {
-    toast.success('Downloading secured PDF...');
-    window.open(AnalysisService.getDownloadUrl(id as string), '_blank');
-  };
-
-  const handleShare = () => {
-    toast.success('Secure share link copied to clipboard!');
+  const handleDownloadRedacted = async () => {
+    if (!id) return;
+    let path = redactedPath;
+    if (!path) {
+      toast.info('Securing document and applying redactions...');
+      path = await handleApplyRedactions();
+    }
+    if (path || redactedPath) {
+      toast.success('Downloading secured PDF...');
+      window.open(AnalysisService.getDownloadUrl(id as string), '_blank');
+    }
   };
 
   if (loading) {
@@ -163,18 +175,22 @@ export function DocumentAnalysis() {
           <Button variant="outline" size="sm" onClick={handleExportAudit} title="Export CSV Audit Report">
             <FileBarChart className="mr-2 h-4 w-4" /> Audit Log
           </Button>
-          {redactedPath && (
-            <>
-              <Button variant="outline" size="sm" onClick={handleShare} title="Generate Secure Link">
-                <Share2 className="mr-2 h-4 w-4" /> Share
-              </Button>
-              <Button variant="default" className="bg-[#0F766E] hover:bg-[#0F766E]/90" size="sm" onClick={handleDownloadRedacted}>
-                <Download className="mr-2 h-4 w-4" /> Download PDF
-              </Button>
-            </>
-          )}
+          <Button
+            variant="default"
+            className="bg-[#0F766E] hover:bg-[#0F766E]/90 text-white font-medium shadow-sm"
+            size="sm"
+            disabled={redacting}
+            onClick={handleDownloadRedacted}
+          >
+            {redacting ? (
+              <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Securing PDF...</>
+            ) : (
+              <><Download className="mr-2 h-4 w-4" /> {redactedPath ? 'Download Redacted PDF' : 'Secure & Download PDF'}</>
+            )}
+          </Button>
         </div>
       </div>
+
 
       {/* Summary Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

@@ -75,7 +75,7 @@ class RedactRequest(BaseModel):
     output_path: str
     entities: List[RedactEntity]
 
-# Helper to extract text and bboxes from PDF using PyMuPDF
+# Helper to extract text and bboxes from PDF using PyMuPDF (with OCR fallback for scanned PDFs)
 def extract_pdf_data(pdf_path: str) -> List[Dict[str, Any]]:
     try:
         doc = fitz.open(pdf_path)
@@ -83,6 +83,12 @@ def extract_pdf_data(pdf_path: str) -> List[Dict[str, Any]]:
         logger.error(f"Failed to open PDF: {e}")
         raise ValueError("Invalid PDF file format")
         
+    if doc.is_encrypted:
+        if not doc.authenticate(""):
+            logger.warning(f"PDF {pdf_path} is password-protected.")
+            doc.close()
+            raise ValueError("Password-protected PDF. Please upload an unlocked PDF file.")
+
     pages_data = []
     for page_num in range(len(doc)):
         page = doc[page_num]
@@ -105,11 +111,42 @@ def extract_pdf_data(pdf_path: str) -> List[Dict[str, Any]]:
                 "bbox": rect
             })
             
+        # OCR scan for image-only, scanned, or image-embedded PDF pages
+        page_images = page.get_images()
+        if not full_text.strip() or len(page_images) > 0 or len(full_text.strip()) < 200:
+            logger.info(f"Page {page_num + 1} has embedded images or sparse text. Running OCR scan...")
+            try:
+                dpi = 150
+                pix = page.get_pixmap(dpi=dpi)
+                temp_img_path = f"{pdf_path}_temp_page_{page_num}.png"
+                pix.save(temp_img_path)
+                ocr_text, ocr_mappings = perform_ocr(temp_img_path)
+                if os.path.exists(temp_img_path):
+                    os.remove(temp_img_path)
+                if ocr_text.strip() and (len(ocr_text.strip()) > len(full_text.strip()) or not full_text.strip()):
+                    scale_x = page.rect.width / float(pix.width)
+                    scale_y = page.rect.height / float(pix.height)
+                    scaled_mappings = []
+                    for m in ocr_mappings:
+                        b = m["bbox"]
+                        scaled_mappings.append({
+                            "word": m["word"],
+                            "start": m["start"],
+                            "end": m["end"],
+                            "bbox": [b[0] * scale_x, b[1] * scale_y, b[2] * scale_x, b[3] * scale_y]
+                        })
+                    full_text = ocr_text
+                    word_mappings = scaled_mappings
+            except Exception as ocr_err:
+                logger.error(f"OCR fallback error on page {page_num + 1}: {ocr_err}")
+
         pages_data.append({
             "page_number": page_num + 1,
             "text": full_text,
             "word_mappings": word_mappings
         })
+
+
     doc.close()
     return pages_data
 

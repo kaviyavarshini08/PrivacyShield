@@ -73,7 +73,8 @@ export class DeviceSecurity {
   static async saveEncryptedData(key: string, value: string): Promise<boolean> {
     try {
       if (Platform.OS === 'web') {
-        localStorage.setItem(key, btoa(value));
+        const encoded = typeof btoa === 'function' ? btoa(value) : value;
+        localStorage.setItem(key, encoded);
         return true;
       }
       await SecureStore.setItemAsync(key, value);
@@ -88,7 +89,8 @@ export class DeviceSecurity {
     try {
       if (Platform.OS === 'web') {
         const item = localStorage.getItem(key);
-        return item ? atob(item) : null;
+        if (!item) return null;
+        return typeof atob === 'function' ? atob(item) : item;
       }
       return await SecureStore.getItemAsync(key);
     } catch (e) {

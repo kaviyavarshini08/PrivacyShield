@@ -58,6 +58,21 @@ export default function Upload() {
     }
   };
 
+const safeBtoa = (str: string) => {
+  try {
+    if (typeof btoa === 'function') return btoa(str);
+  } catch (e) {}
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
+  let output = '';
+  for (let block = 0, charCode, i = 0, map = chars;
+       str.charAt(i | 0) || (map = '=', i % 1);
+       output += map.charAt(63 & block >> 8 - i % 1 * 8)) {
+    charCode = str.charCodeAt(i += 3/4);
+    block = block << 8 | charCode;
+  }
+  return output;
+};
+
   const handleCameraCapture = () => {
     // Generate simulated PII file blobs based on chosen subject
     let fileName = '';
@@ -81,7 +96,7 @@ export default function Upload() {
       size: fileContent.length,
       // For web, create a Blob from string content
       raw: Platform.OS === 'web' ? new Blob([fileContent], { type: 'text/plain' }) : null,
-      uri: Platform.OS !== 'web' ? 'data:text/plain;base64,' + btoa(fileContent) : null,
+      uri: Platform.OS !== 'web' ? 'data:text/plain;base64,' + safeBtoa(fileContent) : null,
       content: fileContent
     };
 

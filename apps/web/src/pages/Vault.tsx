@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Lock, FileText, Share2, Eye, Search, ChevronDown, Loader2 } from 'lucide-react';
+import { Lock, FileText, ShieldAlert, Eye, Search, ChevronDown, Loader2 } from 'lucide-react';
 import { Card, CardContent } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
@@ -8,25 +8,39 @@ import { DocumentService, AnalysisService } from '../services/api';
 export function Vault() {
   const [vaultData, setVaultData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const fetchVaultItems = async () => {
     try {
       const response = await DocumentService.getVaultItems();
-      setVaultData(response.data);
+      setVaultData(response.data || []);
     } catch (error) {
       console.error("Failed to fetch vault items", error);
     } finally {
       setIsLoading(false);
     }
   };
-useEffect(() => {
+
+  useEffect(() => {
     fetchVaultItems();
   }, []);
 
-  
   const handleDownload = (id: string) => {
     window.open(AnalysisService.getDownloadUrl(id), '_blank');
   };
+
+  const totalFiles = vaultData.length;
+  const totalPiiRedacted = vaultData.reduce((acc, item) => acc + (item.pii || 0), 0);
+  const totalStorageMb = vaultData.reduce((acc, item) => {
+    const szStr = String(item.size || '0');
+    const val = parseFloat(szStr) || 0;
+    return acc + val;
+  }, 0).toFixed(2);
+
+  const filteredVault = vaultData.filter(item => 
+    (item.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (item.category || '').toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="space-y-8 max-w-[1400px] mx-auto">
@@ -41,8 +55,8 @@ useEffect(() => {
             <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center mb-4 border border-blue-100 dark:border-blue-800">
               <Lock className="w-5 h-5 text-blue-600 dark:text-blue-400" />
             </div>
-            <h3 className="text-2xl font-bold text-foreground">1,428</h3>
-            <p className="text-sm text-muted-foreground mt-1">Total Files</p>
+            <h3 className="text-2xl font-bold text-foreground">{totalFiles}</h3>
+            <p className="text-sm text-muted-foreground mt-1">Vault Files</p>
           </CardContent>
         </Card>
 
@@ -51,7 +65,7 @@ useEffect(() => {
             <div className="w-10 h-10 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center mb-4 border border-emerald-100 dark:border-emerald-800">
               <FileText className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
             </div>
-            <h3 className="text-2xl font-bold text-foreground">18.4 GB</h3>
+            <h3 className="text-2xl font-bold text-foreground">{totalStorageMb} MB</h3>
             <p className="text-sm text-muted-foreground mt-1">Storage Used</p>
           </CardContent>
         </Card>
@@ -59,10 +73,10 @@ useEffect(() => {
         <Card className="shadow-sm rounded-xl">
           <CardContent className="p-6">
             <div className="w-10 h-10 rounded-lg bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center mb-4 border border-amber-100 dark:border-amber-800">
-              <Share2 className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+              <ShieldAlert className="w-5 h-5 text-amber-600 dark:text-amber-400" />
             </div>
-            <h3 className="text-2xl font-bold text-foreground">234</h3>
-            <p className="text-sm text-muted-foreground mt-1">Shared Files</p>
+            <h3 className="text-2xl font-bold text-foreground">{totalPiiRedacted}</h3>
+            <p className="text-sm text-muted-foreground mt-1">PII Elements Redacted</p>
           </CardContent>
         </Card>
 
@@ -81,10 +95,15 @@ useEffect(() => {
         <div className="p-4 border-b border-border flex flex-col sm:flex-row justify-between items-center gap-4">
           <div className="relative w-full max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input className="pl-9 h-10" placeholder="Search files..." />
+            <Input 
+              className="pl-9 h-10" 
+              placeholder="Search vault files..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
           <Button variant="outline" className="w-full sm:w-auto h-10 justify-between min-w-[120px]">
-            All
+            All Items
             <ChevronDown className="w-4 h-4 ml-2" />
           </Button>
         </div>
@@ -109,14 +128,14 @@ useEffect(() => {
                     Loading vault data...
                   </td>
                 </tr>
-              ) : vaultData.length === 0 ? (
+              ) : filteredVault.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground">
-                    No items in secure vault.
+                    No items found in secure vault. Upload documents in Workspace to redact PII and save them here.
                   </td>
                 </tr>
               ) : (
-                vaultData.map((item) => (
+                filteredVault.map((item) => (
                   <tr key={item.id} className="hover:bg-muted/30 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-start space-x-3">
@@ -129,17 +148,17 @@ useEffect(() => {
                     </td>
                     <td className="px-6 py-4">
                       <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-muted text-muted-foreground">
-                        {item.category}
+                        {item.category || 'PDF Document'}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-center font-bold text-foreground">
-                      {item.pii}
+                      {item.pii || 0}
                     </td>
                     <td className="px-6 py-4 text-muted-foreground">
-                      {item.access}
+                      {item.access || 'Restricted'}
                     </td>
                     <td className="px-6 py-4 text-muted-foreground">
-                      {item.date}
+                      {item.date || 'Today'}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end space-x-1">
@@ -151,9 +170,6 @@ useEffect(() => {
                           title="Download Redacted"
                         >
                           <Eye className="w-4 h-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
-                          <Share2 className="w-4 h-4" />
                         </Button>
                       </div>
                     </td>

@@ -1,20 +1,94 @@
-import { useState } from 'react';
-import { Shield, Lock, Search } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Shield, Lock, Search, ShieldAlert } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { Switch, Badge } from '../components/ui/index';
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
+import { AdminService } from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import { toast } from 'sonner';
 
-const usersList = [
+const DEFAULT_USERS_LIST = [
   { id: 1, name: 'John Doe', email: 'john@company.com', role: 'Admin', status: 'Active' },
   { id: 2, name: 'Jane Smith', email: 'jane@company.com', role: 'Manager', status: 'Active' },
   { id: 3, name: 'Mike Ross', email: 'mike@company.com', role: 'Viewer', status: 'Inactive' },
 ];
 
 export function Admin() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const [usersList, setUsersList] = useState<any[]>(DEFAULT_USERS_LIST);
   const [mfaEnabled, setMfaEnabled] = useState(true);
   const [autoLock, setAutoLock] = useState(false);
   const [strictUpload, setStrictUpload] = useState(true);
+
+  const fetchUsers = () => {
+    AdminService.getUsers()
+      .then((res) => setUsersList(res.data))
+      .catch((err) => console.error("Failed to load users", err));
+  };
+
+  const fetchPolicies = () => {
+    AdminService.getSecurityPolicies()
+      .then((res) => {
+        setMfaEnabled(res.data.mfa_enabled);
+        setAutoLock(res.data.auto_lock);
+        setStrictUpload(res.data.strict_upload);
+      })
+      .catch((err) => console.error("Failed to load security policies", err));
+  };
+
+  useEffect(() => {
+    if (user?.role === 'admin') {
+      fetchUsers();
+      fetchPolicies();
+    }
+  }, [user]);
+
+  if (user?.role !== 'admin') {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4 max-w-[1400px] mx-auto p-6">
+        <Card className="max-w-md w-full p-6 text-center space-y-4 border-destructive/30 bg-destructive/5 shadow-lg rounded-2xl">
+          <div className="w-12 h-12 rounded-full bg-destructive/10 text-destructive flex items-center justify-center mx-auto">
+            <ShieldAlert className="w-6 h-6" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-foreground">Access Restricted</h2>
+            <p className="text-sm text-muted-foreground mt-2">
+              The Admin Panel is reserved exclusively for Organization Administrators. Your logged in account role is <strong className="uppercase text-foreground">{user?.role || 'USER'}</strong>.
+            </p>
+          </div>
+          <Button onClick={() => navigate('/dashboard')} className="w-full bg-[#1E3A8A] hover:bg-[#1E3A8A]/90 text-white font-medium">
+            Return to Dashboard
+          </Button>
+        </Card>
+      </div>
+    );
+  }
+
+  const handleMfaToggle = (val: boolean) => {
+    setMfaEnabled(val);
+    AdminService.updateSecurityPolicies({ mfa_enabled: val })
+      .then(() => toast.success("MFA policy updated"))
+      .catch(() => toast.error("Failed to update MFA policy"));
+  };
+
+  const handleAutoLockToggle = (val: boolean) => {
+    setAutoLock(val);
+    AdminService.updateSecurityPolicies({ auto_lock: val })
+      .then(() => toast.success("Session lock policy updated"))
+      .catch(() => toast.error("Failed to update auto-lock policy"));
+  };
+
+  const handleStrictUploadToggle = (val: boolean) => {
+    setStrictUpload(val);
+    AdminService.updateSecurityPolicies({ strict_upload: val })
+      .then(() => toast.success("Upload rules policy updated"))
+      .catch(() => toast.error("Failed to update upload policy"));
+  };
+
 
   return (
     <div className="space-y-8 max-w-[1400px] mx-auto">
@@ -89,7 +163,7 @@ export function Admin() {
                   <p className="font-medium">Require MFA</p>
                   <p className="text-sm text-muted-foreground">Force multi-factor authentication for all users.</p>
                 </div>
-                <Switch checked={mfaEnabled} onCheckedChange={setMfaEnabled} />
+                <Switch checked={mfaEnabled} onCheckedChange={handleMfaToggle} />
               </div>
               
               <div className="flex items-center justify-between">
@@ -97,7 +171,7 @@ export function Admin() {
                   <p className="font-medium">Auto-lock Sessions</p>
                   <p className="text-sm text-muted-foreground">Lock inactive sessions after 15 minutes.</p>
                 </div>
-                <Switch checked={autoLock} onCheckedChange={setAutoLock} />
+                <Switch checked={autoLock} onCheckedChange={handleAutoLockToggle} />
               </div>
 
               <div className="flex items-center justify-between">
@@ -105,7 +179,7 @@ export function Admin() {
                   <p className="font-medium">Strict Upload Rules</p>
                   <p className="text-sm text-muted-foreground">Only allow predefined file formats in Workspace.</p>
                 </div>
-                <Switch checked={strictUpload} onCheckedChange={setStrictUpload} />
+                <Switch checked={strictUpload} onCheckedChange={handleStrictUploadToggle} />
               </div>
             </CardContent>
           </Card>

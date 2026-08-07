@@ -13,9 +13,14 @@ QUARANTINE_DIR = os.path.join(settings.UPLOAD_DIR, "quarantine")
 MAGIC_HEADERS = {
     "application/pdf": b"%PDF",
     "image/png": b"\x89PNG",
+    "image/x-png": b"\x89PNG",
     "image/jpeg": b"\xff\xd8\xff",
+    "image/jpg": b"\xff\xd8\xff",
+    "image/pjpeg": b"\xff\xd8\xff",
+    "image/webp": b"RIFF",
     "application/zip": b"PK\x03\x04",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": b"PK\x03\x04"
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": b"PK\x03\x04",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": b"PK\x03\x04",
 }
 
 def verify_file_mime_header(file_path: str, declared_content_type: str) -> bool:
@@ -23,21 +28,26 @@ def verify_file_mime_header(file_path: str, declared_content_type: str) -> bool:
     Validates that the file's binary magic headers match its declared MIME content-type.
     Prevents extension-spoofing attacks (e.g. uploading malware.exe as invoice.pdf).
     """
-    expected_header = MAGIC_HEADERS.get(declared_content_type)
-    if not expected_header:
-        # If file type is generic (like text/plain), skip magic verification
+    content_type = (declared_content_type or "").lower()
+    file_ext = os.path.splitext(file_path)[1].lower()
+
+    if content_type in ["text/plain", "text/csv"] or file_ext in [".txt", ".csv", ".json", ".log"]:
         return True
-        
+
     try:
         with open(file_path, "rb") as f:
-            file_header = f.read(len(expected_header))
+            header_bytes = f.read(16)
             
-        if file_header != expected_header:
-            logger.error(
-                f"MIME Spoofing detected! Declared: {declared_content_type}, "
-                f"Expected Header: {expected_header}, Found: {file_header}."
-            )
-            return False
+        if "pdf" in content_type or file_ext == ".pdf":
+            return header_bytes.startswith(b"%PDF")
+        if "png" in content_type or file_ext == ".png":
+            return header_bytes.startswith(b"\x89PNG")
+        if "jpeg" in content_type or "jpg" in content_type or file_ext in [".jpg", ".jpeg"]:
+            return header_bytes.startswith(b"\xff\xd8")
+        if "webp" in content_type or file_ext == ".webp":
+            return b"RIFF" in header_bytes or b"WEBP" in header_bytes
+        if "zip" in content_type or "docx" in content_type or "xlsx" in content_type or file_ext in [".docx", ".xlsx", ".zip"]:
+            return header_bytes.startswith(b"PK")
     except Exception as e:
         logger.error(f"Error checking file header: {e}")
         return False

@@ -1,72 +1,60 @@
 import os
 import json
-import httpx
+import re
 import logging
 from .base import BasePIIProvider
+from .presidio import PresidioProvider
 from typing import List, Dict, Any
 
 logger = logging.getLogger(__name__)
 
 class OpenAIProvider(BasePIIProvider):
     """
-    Optional external PII analysis provider querying OpenAI models (like gpt-4o-mini)
-    to perform high-intelligence semantic identification of secrets and sensitive leaks.
+    100% Local Self-Contained PII analysis provider.
+    Replaces external OpenAI API dependencies with local Presidio NLP and 
+    high-entropy pattern matching for secrets, passwords, and PII.
     """
     def __init__(self):
-        self.api_key = os.getenv("OPENAI_API_KEY")
-        self.api_url = "https://api.openai.com/v1/chat/completions"
+        self.presidio = PresidioProvider()
 
     def analyze(self, text: str, language: str = "en") -> List[Dict[str, Any]]:
-        if not self.api_key or not text.strip():
-            logger.info("OpenAI API key missing or empty text, bypassing OpenAI provider.")
+        if not text or not text.strip():
             return []
 
-        prompt = (
-            "You are a cybersecurity scanner. Analyze the following text and locate all Personally Identifiable "
-            "Information (PII) elements: Aadhaar card numbers, PAN cards, Passport numbers, Phone numbers, "
-            "Emails, Credit Card numbers, Bank account details, Names, API Keys, or Password leaks.\n\n"
-            "Return a JSON object containing a key 'entities' with a list of matches. Each match must contain "
-            "'entity_type' (e.g. EMAIL_ADDRESS, IN_AADHAAR, IN_PAN, PERSON, LOCATION, API_KEY), 'text' (exact text snippet match), "
-            "'start_char' (0-indexed start position character index), 'end_char' (0-indexed end position character index), "
-            "and 'confidence' (float from 0.0 to 1.0).\n\n"
-            "Text to scan:\n"
-            f"\"\"\"\n{text}\n\"\"\""
-        )
+        logger.info("Running local offline PII and security scanner...")
+        entities = []
 
+        # 1. Run local Presidio NLP analyzer
         try:
-            headers = {
-                "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json"
-            }
-            payload = {
-                "model": "gpt-4o-mini",
-                "messages": [
-                    {"role": "system", "content": "You are a precise cybersecurity JSON extraction engine."},
-                    {"role": "user", "content": prompt}
-                ],
-                "response_format": {"type": "json_object"},
-                "temperature": 0.1
-            }
-
-            with httpx.Client(timeout=30.0) as client:
-                response = client.post(self.api_url, headers=headers, json=payload)
-                
-            if response.status_code == 200:
-                data = response.json()
-                content = data["choices"][0]["message"]["content"]
-                result_json = json.loads(content)
-                entities = result_json.get("entities", [])
-                
-                # Verify coordinates schema
-                validated_entities = []
-                for ent in entities:
-                    if all(k in ent for k in ["entity_type", "text", "start_char", "end_char", "confidence"]):
-                        validated_entities.append(ent)
-                return validated_entities
-            else:
-                logger.error(f"OpenAI PII extraction API error: {response.status_code} - {response.text}")
-                
+            entities = self.presidio.analyze(text, language)
         except Exception as e:
-            logger.exception(f"OpenAI PII analyzer provider failed: {e}")
+            logger.warning(f"Local Presidio analyzer step warning: {e}")
 
-        return []
+        # 2. Local high-entropy and regional PII regex patterns
+        patterns = [
+            ("IN_AADHAAR", r"\b\d{4}\s?\d{4}\s?\d{4}\b", 0.95),
+            ("IN_PAN", r"\b[A-Z]{5}[0-9]{4}[A-Z]{1}\b", 0.95),
+            ("EMAIL_ADDRESS", r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b", 0.98),
+            ("PHONE_NUMBER", r"\b(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b", 0.90),
+            ("CREDIT_CARD", r"\b(?:\d[ -]*?){13,16}\b", 0.92),
+            ("API_KEY", r"\b(?:sk_[a-zA-Z0-9]{24,32}|AKIA[0-9A-Z]{16}|ghp_[a-zA-Z0-9]{36})\b", 0.99),
+            ("SECRET_LEAK", r"\b(?:password|passwd|secret_key|api_secret)\s*=\s*['\"][^'\"]+['\"]\b", 0.95),
+        ]
+
+        existing_spans = {(e["start_char"], e["end_char"]) for e in entities}
+
+        for entity_type, regex_str, conf in patterns:
+            for match in re.finditer(regex_str, text, re.IGNORECASE):
+                start, end = match.start(), match.end()
+                if (start, end) not in existing_spans:
+                    entities.append({
+                        "entity_type": entity_type,
+                        "text": match.group(0),
+                        "start_char": start,
+                        "end_char": end,
+                        "confidence": conf
+                    })
+                    existing_spans.add((start, end))
+
+        return entities
+

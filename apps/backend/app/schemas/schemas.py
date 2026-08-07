@@ -9,12 +9,19 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str
+    sec_q1: Optional[str] = None
+    sec_a1: Optional[str] = None
+    sec_q2: Optional[str] = None
+    sec_a2: Optional[str] = None
+    sec_q3: Optional[str] = None
+    sec_a3: Optional[str] = None
 
 class UserResponse(UserBase):
     id: int
-    role: str
     is_active: bool
-    mfa_enabled: bool
+    sec_q1: Optional[str] = None
+    sec_q2: Optional[str] = None
+    sec_q3: Optional[str] = None
     created_at: datetime
 
     class Config:
@@ -29,7 +36,6 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     email: Optional[str] = None
-    role: Optional[str] = None
 
 class RefreshTokenRequest(BaseModel):
     refresh_token: str

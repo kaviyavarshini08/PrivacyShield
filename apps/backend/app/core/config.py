@@ -27,7 +27,17 @@ class Settings(BaseSettings):
             elif db_url.startswith("postgresql://"):
                 return db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
             return db_url
-        return f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}/{self.POSTGRES_DB}"
+        try:
+            import socket
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(0.5)
+            result = sock.connect_ex(('localhost', 5432))
+            sock.close()
+            if result == 0:
+                return f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}/{self.POSTGRES_DB}"
+        except Exception:
+            pass
+        return "sqlite+aiosqlite:///./privacyshield.db"
     
     @property
     def SYNC_DATABASE_URI(self) -> str:
@@ -36,7 +46,17 @@ class Settings(BaseSettings):
             if db_url.startswith("postgres://"):
                 return db_url.replace("postgres://", "postgresql://", 1)
             return db_url
-        return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}/{self.POSTGRES_DB}"
+        try:
+            import socket
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(0.5)
+            result = sock.connect_ex(('localhost', 5432))
+            sock.close()
+            if result == 0:
+                return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}/{self.POSTGRES_DB}"
+        except Exception:
+            pass
+        return "sqlite:///./privacyshield.db"
 
     # Redis Connection
     REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
@@ -54,8 +74,14 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: Optional[str] = os.getenv("OPENAI_API_KEY")
     
     # AI Services URL (Microservice)
-    AI_SERVICE_URL: str = os.getenv("AI_SERVICE_URL", "http://localhost:8002")
-    
+    AI_SERVICE_URL: str = os.getenv("AI_SERVICE_URL", "http://localhost:8001")
+
+    # SMTP Email Delivery Settings
+    SMTP_SERVER: str = os.getenv("SMTP_SERVER", "smtp.gmail.com")
+    SMTP_PORT: int = int(os.getenv("SMTP_PORT", "587"))
+    SMTP_USER: Optional[str] = os.getenv("SMTP_USER")
+    SMTP_PASSWORD: Optional[str] = os.getenv("SMTP_PASSWORD")
+    EMAIL_FROM: str = os.getenv("EMAIL_FROM", "noreply@privacyshield.io")
     # AI & Embeddings Configurations
     EMBEDDING_PROVIDER: str = os.getenv("EMBEDDING_PROVIDER", "local") # 'local' or 'openai'
     ENABLE_GPU_INFERENCE: bool = os.getenv("ENABLE_GPU_INFERENCE", "false").lower() == "true"

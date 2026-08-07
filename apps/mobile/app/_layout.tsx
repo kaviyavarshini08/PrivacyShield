@@ -36,7 +36,18 @@ export default function RootLayout() {
             <Stack.Screen name="login" />
             <Stack.Screen name="dashboard" />
             <Stack.Screen name="upload" />
+            <Stack.Screen name="workspace" />
+            <Stack.Screen name="queue" />
+            <Stack.Screen name="analysis/[id]" />
+            <Stack.Screen name="vault" />
             <Stack.Screen name="chat" />
+            <Stack.Screen name="investigation" />
+            <Stack.Screen name="review" />
+            <Stack.Screen name="billing" />
+            <Stack.Screen name="compliance" />
+            <Stack.Screen name="analytics" />
+            <Stack.Screen name="admin" />
+            <Stack.Screen name="settings" />
           </Stack>
         </PaperProvider>
       </QueryClientProvider>

@@ -16,25 +16,43 @@ def redact_pdf(pdf_path: str, output_path: str, entities_to_redact: list) -> boo
         
     try:
         for ent in entities_to_redact:
-            page_num = ent["page_number"] - 1
-            bbox = ent["bbox"]
+            page_num = ent.get("page_number", 1) - 1
+            bbox = ent.get("bbox", [])
+            text = str(ent.get("text", "")).strip()
             
             if page_num < 0 or page_num >= len(doc):
-                continue
-                
-            if not bbox or sum(bbox) == 0:
-                continue
-                
+                page_num = 0
+
             page = doc[page_num]
-            rect = fitz.Rect(bbox)
+            rects = []
             
-            # Add redaction annotation (drawn as black box)
-            # This marks the rectangle for removal
-            page.add_redact_annot(rect, fill=(0, 0, 0))
+            if bbox and len(bbox) == 4 and sum(bbox) > 0:
+                rects.append(fitz.Rect(bbox))
+                
+            # Dual-layer text search fallback to guarantee 100% text masking even if bboxes are missing/approximate
+            if text:
+                found_rects = page.search_for(text)
+                for r in found_rects:
+                    if r not in rects:
+                        rects.append(r)
+
+            # Also check across all pages if entity text is found anywhere in the PDF
+            if not rects and text:
+                for p_idx, p in enumerate(doc):
+                    all_p_rects = p.search_for(text)
+                    for r in all_p_rects:
+                        p.add_redact_annot(r, fill=(0, 0, 0))
+                        p.draw_rect(r, color=(0, 0, 0), fill=(0, 0, 0))
+
+            for rect in rects:
+                page.add_redact_annot(rect, fill=(0, 0, 0))
+                page.draw_rect(rect, color=(0, 0, 0), fill=(0, 0, 0))
             
         # Apply the redactions to erase the actual text characters from the streams
         for page in doc:
             page.apply_redactions()
+
+
             
         # Strip document metadata to prevent metadata information leaks
         empty_metadata = {

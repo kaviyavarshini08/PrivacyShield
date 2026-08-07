@@ -98,10 +98,11 @@ export function Workspace() {
           
           <input 
             type="file" 
+            data-testid="file-upload"
             ref={fileInputRef} 
             className="hidden" 
             onChange={handleFileSelect}
-            accept=".pdf,.docx,.txt"
+            accept=".pdf,.docx,.xlsx,.txt,.png,.jpg,.jpeg"
           />
           
           {!isUploading && (

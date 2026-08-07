@@ -18,7 +18,9 @@ class Permission:
 ROLE_PERMISSIONS: Dict[str, Set[str]] = {
     "user": {
         Permission.DOCUMENT_VIEW,
-        Permission.DOCUMENT_UPLOAD
+        Permission.DOCUMENT_UPLOAD,
+        Permission.REDACTION_APPLY,
+        Permission.AI_FEEDBACK_REVIEW
     },
     "analyst": {
         Permission.COMPLIANCE_EXPORT

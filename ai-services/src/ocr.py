@@ -15,6 +15,8 @@ if tesseract_cmd:
 import cv2
 from PIL import Image
 
+import numpy as np
+
 def perform_ocr(image_path: str):
     """
     Performs OCR on an image and returns:
@@ -22,10 +24,11 @@ def perform_ocr(image_path: str):
     2. List of word mappings, containing the word, character offsets, and bounding boxes.
     """
     try:
-        # Load using OpenCV to enable computer vision filtering
-        img_cv = cv2.imread(image_path)
+        # Load using np.fromfile + cv2.imdecode to handle file paths with spaces on Windows
+        img_array = np.fromfile(image_path, dtype=np.uint8)
+        img_cv = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
         if img_cv is None:
-            raise Exception("OpenCV read returned None")
+            raise Exception("cv2.imdecode returned None")
             
         # CV Preprocessing: grayscale -> median blur -> otsu threshold
         gray = cv2.cvtColor(img_cv, cv2.COLOR_BGR2GRAY)
@@ -39,7 +42,8 @@ def perform_ocr(image_path: str):
         try:
             img = Image.open(image_path)
         except Exception as load_err:
-            raise ValueError(f"Could not load image file: {str(load_err)}")
+            logger.error(f"Could not load image file with PIL: {load_err}")
+            return "", []
         
     try:
         # pytesseract.image_to_data returns detailed positions of each word

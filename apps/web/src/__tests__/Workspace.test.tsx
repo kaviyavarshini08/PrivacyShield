@@ -6,6 +6,9 @@ import { expect, test, vi } from 'vitest';
 vi.mock('../services/api', () => ({
   AnalysisService: {
     uploadDocument: vi.fn().mockResolvedValue({ data: { message: 'Success' } }),
+  },
+  DocumentService: {
+    upload: vi.fn().mockResolvedValue({ data: { message: 'Success' } }),
   }
 }));
 
@@ -15,8 +18,8 @@ test('renders Workspace and Upload zone', () => {
       <Workspace />
     </BrowserRouter>
   );
-  expect(screen.getByText(/Document Analysis Workspace/i)).toBeInTheDocument();
-  expect(screen.getByText(/Drag & drop a file here/i)).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: /Upload Documents/i })).toBeInTheDocument();
+  expect(screen.getByText(/Drop files here or click to browse/i)).toBeInTheDocument();
 });
 
 test('shows error toast on invalid file type', () => {

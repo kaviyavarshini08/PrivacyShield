@@ -12,6 +12,7 @@ from ..core.security import get_current_user
 
 router = APIRouter()
 
+@router.get("", response_model=List[ProcessingQueueResponse])
 @router.get("/", response_model=List[ProcessingQueueResponse])
 async def get_queue(
     db: AsyncSession = Depends(get_db),

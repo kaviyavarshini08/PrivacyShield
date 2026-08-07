@@ -1,7 +1,5 @@
 import json
 from typing import Dict, Any
-from sqlalchemy.orm import Session
-from ..models.models import FalsePositiveLog
 
 def generate_explainability_metadata(entity_type: str, text: str, confidence: float) -> Dict[str, Any]:
     """
@@ -39,31 +37,13 @@ def generate_explainability_metadata(entity_type: str, text: str, confidence: fl
     }
 
 def calibrate_confidence_sync(
-    db: Session, 
+    db, 
     organization_id: int, 
     entity_type: str, 
     text: str, 
     raw_confidence: float
 ) -> float:
     """
-    Calibrates confidence scores based on previous false positive logs for this organization.
+    Returns raw confidence score (false positive tracking removed).
     """
-    if not organization_id:
-        return raw_confidence
-
-    try:
-        # Check matching false positive records
-        count = db.query(FalsePositiveLog).filter(
-            FalsePositiveLog.organization_id == organization_id,
-            FalsePositiveLog.entity_type == entity_type,
-            FalsePositiveLog.text == text
-        ).count()
-        
-        if count > 0:
-            # Drop confidence score by 20% per event, min 0.1
-            scale = max(0.1, 1.0 - (count * 0.2))
-            return round(raw_confidence * scale, 3)
-    except Exception:
-        pass
-        
     return raw_confidence

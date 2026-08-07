@@ -1,6 +1,26 @@
 {
-  "plugins": [
-    "expo-router",
-    "expo-secure-store"
-  ]
+  "expo": {
+    "name": "PrivacyShield Mobile",
+    "slug": "privacyshield-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "scheme": "privacyshield",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#020617"
+      }
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store"
+    ]
+  }
 }

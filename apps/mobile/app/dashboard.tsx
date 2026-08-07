@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, StyleSheet, ScrollView, RefreshControl, Platform } from 'react-native';
-import { Text, Card, ActivityIndicator, IconButton, Portal, Dialog, Button, ProgressBar } from 'react-native-paper';
+import { View, StyleSheet, ScrollView, RefreshControl, Platform, TouchableOpacity } from 'react-native';
+import { Text, ActivityIndicator, IconButton } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '../src/store/authStore';
 import { useQueue, useVault } from '../src/api/query';
@@ -27,6 +27,19 @@ export default function Dashboard() {
   const totalVaultSize = vaultItems?.length || 0;
   const activeJobs = queueItems?.filter((item: any) => item.status === 'queued' || item.status === 'processing').length || 0;
   const totalLeaks = queueItems?.reduce((acc: number, item: any) => acc + (item.pii_found_count || 0), 0) || 0;
+
+  const quickLinks = [
+    { title: 'Workspace', icon: 'folder-multiple-outline', route: '/workspace', color: '#6366f1' },
+    { title: 'Queue', icon: 'tray-full', route: '/queue', color: '#3b82f6' },
+    { title: 'Vault', icon: 'safe-square-outline', route: '/vault', color: '#10b981' },
+    { title: 'RAG Search', icon: 'database-search', route: '/investigation', color: '#a855f7' },
+    { title: 'Review', icon: 'check-decagram-outline', route: '/review', color: '#f59e0b' },
+    { title: 'Compliance', icon: 'shield-account', route: '/compliance', color: '#8b5cf6' },
+    { title: 'Analytics', icon: 'chart-box-outline', route: '/analytics', color: '#ec4899' },
+    { title: 'Billing', icon: 'credit-card-outline', route: '/billing', color: '#06b6d4' },
+    { title: 'Admin', icon: 'security', route: '/admin', color: '#ef4444' },
+    { title: 'Settings', icon: 'cog-outline', route: '/settings', color: '#64748b' },
+  ];
 
   return (
     <View style={styles.container}>
@@ -80,19 +93,32 @@ export default function Dashboard() {
           </GlassCard>
         </View>
 
-        {/* Action Row */}
+        {/* Primary Action Buttons */}
         <View style={styles.actionsContainer}>
           <CyberButton
-            title="Upload and Scan File"
+            title="Upload Document"
             onPress={() => router.push('/upload')}
             style={styles.actionBtn}
           />
           <CyberButton
-            title="Privacy Chat AI"
+            title="AI Security Chat"
             onPress={() => router.push('/chat')}
             variant="secondary"
             style={[styles.actionBtn, { marginLeft: 12 }]}
           />
+        </View>
+
+        {/* All Web Feature Navigation Grid */}
+        <Text style={styles.sectionTitle}>Security Suite Navigation</Text>
+        <View style={styles.navGrid}>
+          {quickLinks.map((item, idx) => (
+            <TouchableOpacity key={idx} style={styles.navTile} onPress={() => router.push(item.route as any)}>
+              <GlassCard style={styles.tileCard}>
+                <IconButton icon={item.icon} iconColor={item.color} size={26} style={{ margin: 0 }} />
+                <Text style={styles.tileTitle}>{item.title}</Text>
+              </GlassCard>
+            </TouchableOpacity>
+          ))}
         </View>
 
         {/* Processing Queue Section */}
@@ -102,10 +128,15 @@ export default function Dashboard() {
             <ActivityIndicator color="#3b82f6" style={{ marginVertical: 20 }} />
           ) : queueItems && queueItems.length > 0 ? (
             queueItems.map((item: any) => (
-              <View key={item.id} style={styles.listItem}>
+              <TouchableOpacity
+                key={item.id}
+                style={styles.listItem}
+                onPress={() => router.push(`/analysis/${item.id}` as any)}
+                activeOpacity={0.7}
+              >
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.fileName}>{item.document.original_name}</Text>
-                  <Text style={styles.fileDetail}>Status: {item.status.toUpperCase()}</Text>
+                  <Text style={styles.fileName}>{item.document?.original_name || item.name}</Text>
+                  <Text style={styles.fileDetail}>Status: {(item.status || 'queued').toUpperCase()}</Text>
                 </View>
                 {item.status === 'processing' && (
                   <ActivityIndicator size="small" color="#3b82f6" />
@@ -113,38 +144,10 @@ export default function Dashboard() {
                 {item.status === 'completed' && (
                   <Text style={styles.statusCompleted}>{item.pii_found_count || 0} Leaks</Text>
                 )}
-                {item.status === 'failed' && (
-                  <Text style={styles.statusFailed}>Failed</Text>
-                )}
-              </View>
+              </TouchableOpacity>
             ))
           ) : (
-            <Text style={styles.emptyText}>No documents in processing queue</Text>
-          )}
-        </GlassCard>
-
-        {/* Redacted Vault Section */}
-        <Text style={styles.sectionTitle}>Secured Vault</Text>
-        <GlassCard style={styles.listCard}>
-          {vaultLoading ? (
-            <ActivityIndicator color="#3b82f6" style={{ marginVertical: 20 }} />
-          ) : vaultItems && vaultItems.length > 0 ? (
-            vaultItems.map((item: any) => (
-              <View key={item.id} style={styles.listItem}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.fileName}>{item.name}</Text>
-                  <Text style={styles.fileDetail}>Size: {item.size} • Leaks Masked: {item.pii}</Text>
-                </View>
-                <IconButton
-                  icon="shield-check"
-                  iconColor="#10b981"
-                  size={20}
-                  onPress={() => alert(`Accessing file details in vault...`)}
-                />
-              </View>
-            ))
-          ) : (
-            <Text style={styles.emptyText}>Vault is currently empty</Text>
+            <Text style={styles.emptyText}>No active jobs in queue</Text>
           )}
         </GlassCard>
       </ScrollView>
@@ -179,12 +182,12 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   scrollContainer: {
-    padding: 24,
+    padding: 20,
   },
   metricsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 24,
+    marginBottom: 20,
   },
   metricCard: {
     flex: 0.31,
@@ -205,17 +208,38 @@ const styles = StyleSheet.create({
   },
   actionsContainer: {
     flexDirection: 'row',
-    marginBottom: 32,
+    marginBottom: 24,
   },
   actionBtn: {
     flex: 1,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: 'bold',
     color: '#ffffff',
     marginBottom: 12,
     letterSpacing: 0.5,
+  },
+  navGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: 24,
+  },
+  navTile: {
+    width: '23%',
+    marginBottom: 12,
+  },
+  tileCard: {
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 4,
+  },
+  tileTitle: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#94a3b8',
+    marginTop: 4,
   },
   listCard: {
     marginBottom: 24,
@@ -244,22 +268,17 @@ const styles = StyleSheet.create({
     color: '#10b981',
     fontWeight: '600',
   },
-  statusFailed: {
-    fontSize: 12,
-    color: '#ef4444',
-    fontWeight: '600',
-  },
   emptyText: {
     color: '#475569',
     textAlign: 'center',
-    paddingVertical: 20,
+    paddingVertical: 16,
     fontSize: 13,
   },
   syncBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#0f172a', // slate 900
+    backgroundColor: '#0f172a',
     paddingVertical: 6,
     paddingHorizontal: 24,
     borderBottomWidth: 1,
@@ -280,7 +299,7 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#10b981', // green 500
+    backgroundColor: '#10b981',
   },
   syncDotPulse: {
     position: 'absolute',

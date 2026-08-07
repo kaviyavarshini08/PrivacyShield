@@ -8,7 +8,7 @@ import time
 import logging
 
 from .database import engine, Base, AsyncSessionLocal, redis_client
-from .routers import auth, upload, queue, analysis, compliance, chat, teams, billing
+from .routers import auth, upload, queue, analysis, compliance, chat, teams, billing, analytics, admin
 from .core.config import settings
 from .core.logging import setup_logging, correlation_id_ctx
 from .middleware.security import RequestTracingMiddleware, SecureHeadersMiddleware, RedisRateLimitMiddleware
@@ -79,6 +79,10 @@ app.add_middleware(
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     correlation_id = correlation_id_ctx.get()
+    import traceback
+    print("=== SERVER EXCEPTION TRACEBACK ===")
+    traceback.print_exc()
+    print("==================================")
     logger.exception(f"Unhandled server exception [Correlation ID: {correlation_id}]: {str(exc)}")
     return JSONResponse(
         status_code=500,
@@ -117,6 +121,9 @@ app.include_router(compliance.router, prefix=f"{settings.API_V1_STR}/compliance"
 app.include_router(chat.router, prefix=f"{settings.API_V1_STR}/chat", tags=["AI Chat Assistant"])
 app.include_router(teams.router, prefix=f"{settings.API_V1_STR}/teams", tags=["Team Workspaces"])
 app.include_router(billing.router, prefix=f"{settings.API_V1_STR}/billing", tags=["Stripe Billing"])
+app.include_router(analytics.router, prefix=f"{settings.API_V1_STR}/analytics", tags=["Analytics Hub"])
+app.include_router(admin.router, prefix=f"{settings.API_V1_STR}/admin", tags=["Admin Portal"])
+
 
 # 7. Health Check Probes
 @app.get("/health", tags=["Health Checks"])

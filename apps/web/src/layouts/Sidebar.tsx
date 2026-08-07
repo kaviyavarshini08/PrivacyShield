@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, FilePlus, Lock, Shield, Settings, Sparkles, CreditCard } from 'lucide-react';
+import { LayoutDashboard, FilePlus, Lock, Shield, Settings, Sparkles } from 'lucide-react';
 import { cn } from '../utils/cn';
 
 const navGroups = [
@@ -26,15 +26,12 @@ const navGroups = [
     title: 'Security & Operations',
     icon: Shield,
     items: [
-      { name: 'AI Review Queue', path: '/review' },
       { name: 'Compliance Center', path: '/compliance' },
       { name: 'Analytics Hub', path: '/analytics' },
-      { name: 'Admin Panel', path: '/admin' },
     ]
   },
   {
     items: [
-      { name: 'Stripe Billing', path: '/billing', icon: CreditCard },
       { name: 'System Settings', path: '/settings', icon: Settings },
     ]
   }
