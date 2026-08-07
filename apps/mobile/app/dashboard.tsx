@@ -37,7 +37,6 @@ export default function Dashboard() {
     { title: 'Compliance', icon: 'shield-account', route: '/compliance', color: '#8b5cf6' },
     { title: 'Analytics', icon: 'chart-box-outline', route: '/analytics', color: '#ec4899' },
     { title: 'Billing', icon: 'credit-card-outline', route: '/billing', color: '#06b6d4' },
-    { title: 'Admin', icon: 'security', route: '/admin', color: '#ef4444' },
     { title: 'Settings', icon: 'cog-outline', route: '/settings', color: '#64748b' },
   ];
 

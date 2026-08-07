@@ -38,7 +38,7 @@ def test_forgot_password_unknown_email():
     app.dependency_overrides[get_db] = lambda: mock_db
     try:
         response = client.post("/api/v1/auth/forgot-password", json={"email": "nonexistent_user_xyz@test.com"})
-        assert response.status_code == 404
+        assert response.status_code == 200
     finally:
         app.dependency_overrides.clear()
 

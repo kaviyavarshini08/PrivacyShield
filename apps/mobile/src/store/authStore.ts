@@ -76,7 +76,7 @@ const MOCK_USER: User = {
   id: 1,
   email: 'operator@privacyshield.com',
   fullName: 'Security Operator',
-  role: 'admin',
+  role: 'user',
   isActive: true,
   createdAt: new Date().toISOString(),
 };

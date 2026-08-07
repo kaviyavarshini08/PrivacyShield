@@ -42,6 +42,7 @@ services:
       - db
       - redis
     volumes:
+      - ./apps/backend:/workspace
       - shared_storage:/workspace/backend_storage
 
   celery_worker:
@@ -63,6 +64,7 @@ services:
       - db
       - redis
     volumes:
+      - ./apps/backend:/workspace
       - shared_storage:/workspace/backend_storage
 
   ai-service:

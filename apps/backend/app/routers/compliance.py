@@ -47,9 +47,10 @@ async def get_audit_logs(
     """
     Fetches real audit log entries based on actual uploaded documents and user actions.
     """
-    # 1. Fetch AuditLog records
+    # 1. Fetch AuditLog records for current user
     audit_stmt = (
         select(AuditLog)
+        .filter(AuditLog.user_id == current_user.id)
         .options(selectinload(AuditLog.user))
         .order_by(AuditLog.timestamp.desc())
         .limit(100)
@@ -57,9 +58,10 @@ async def get_audit_logs(
     audit_res = await db.execute(audit_stmt)
     db_logs = audit_res.scalars().all()
 
-    # 2. Fetch Document records to ensure all uploaded files show up in real-time
+    # 2. Fetch Document records for current user
     doc_stmt = (
         select(Document)
+        .filter(Document.owner_id == current_user.id)
         .options(selectinload(Document.owner), selectinload(Document.queue_entry))
         .order_by(Document.created_at.desc())
         .limit(50)
@@ -219,7 +221,7 @@ async def generate_compliance_report(
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
         
-    if current_user.role not in ["admin", "manager", "analyst"] and doc.owner_id != current_user.id:
+    if current_user.role not in ["manager", "analyst"] and doc.owner_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not authorized to access this document's compliance reports")
         
     ent_stmt = select(DetectedEntity).filter(DetectedEntity.document_id == document_id)

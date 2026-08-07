@@ -36,10 +36,11 @@ export function Dashboard() {
   const queueDocsCount = queueItems.length;
   const queuePiiCount = queueItems.reduce((acc, q) => acc + (q.pii_found_count || 0), 0);
 
-  const totalDocs = Math.max(dashboardData?.total_documents || 0, queueDocsCount, vaultCount);
-  const totalEntities = Math.max(dashboardData?.total_entities_found || 0, queuePiiCount);
-  const vaultFiles = vaultCount || 0;
-  const entityCounts = dashboardData?.entity_counts || {};
+  // Use strictly real data from backend — no inflating fallbacks
+  const totalDocs = dashboardData?.total_documents ?? queueDocsCount;
+  const totalEntities = dashboardData?.total_entities_found ?? queuePiiCount;
+  const vaultFiles = vaultCount;
+  const entityCounts: Record<string, number> = dashboardData?.entity_counts || {};
 
   const getEntityCount = (keys: string[]) => {
     let count = 0;
@@ -52,16 +53,12 @@ export function Dashboard() {
     return count;
   };
 
-  const rawAadhaar = getEntityCount(['AADHAAR', 'IN_AADHAAR']);
-  const rawPan = getEntityCount(['PAN', 'IN_PAN']);
-  const rawPhone = getEntityCount(['PHONE', 'MOBILE']);
-  const rawEmail = getEntityCount(['EMAIL']);
+  // Real counts from the user's detected entities — no fabricated fallbacks
+  const aadhaarCount = getEntityCount(['AADHAAR', 'IN_AADHAAR']);
+  const panCount = getEntityCount(['PAN', 'IN_PAN']);
+  const phoneCount = getEntityCount(['PHONE', 'MOBILE', 'PHONE_NUMBER']);
+  const emailCount = getEntityCount(['EMAIL', 'EMAIL_ADDRESS']);
   const secretCount = getEntityCount(['SECRET', 'KEY', 'API', 'TOKEN', 'CREDENTIAL', 'PASSWORD']);
-
-  const aadhaarCount = rawAadhaar || (totalEntities > 0 ? Math.max(1, Math.floor(totalEntities * 0.4)) : 0);
-  const panCount = rawPan || (totalEntities > 0 ? Math.max(1, Math.floor(totalEntities * 0.2)) : 0);
-  const phoneCount = rawPhone || (totalEntities > 0 ? Math.max(1, Math.floor(totalEntities * 0.2)) : 0);
-  const emailCount = rawEmail || (totalEntities > 0 ? Math.max(1, Math.floor(totalEntities * 0.2)) : 0);
 
   const piiBreakdownData = [
     { 
@@ -111,15 +108,18 @@ export function Dashboard() {
     }
   });
 
-  const trendData = [
-    { name: 'Mon', safe: Math.max(0, Math.floor(totalDocs * 0.2)), violations: Math.max(0, Math.floor(totalEntities * 0.2)) },
-    { name: 'Tue', safe: Math.max(0, Math.floor(totalDocs * 0.4)), violations: Math.max(0, Math.floor(totalEntities * 0.35)) },
-    { name: 'Wed', safe: Math.max(0, Math.floor(totalDocs * 0.6)), violations: Math.max(0, Math.floor(totalEntities * 0.55)) },
-    { name: 'Thu', safe: Math.max(0, Math.floor(totalDocs * 0.8)), violations: Math.max(0, Math.floor(totalEntities * 0.75)) },
-    { name: 'Fri', safe: totalDocs, violations: totalEntities },
-    { name: 'Sat', safe: totalDocs, violations: totalEntities },
-    { name: 'Sun', safe: totalDocs, violations: totalEntities },
-  ];
+  // Build trend from real per-document data (actual upload dates from backend)
+  const perDocData: any[] = dashboardData?.per_document_data || [];
+  const trendData = perDocData.length > 0
+    ? perDocData.map((doc: any, idx: number) => ({
+        name: doc.date ? doc.date.slice(5) : `Doc ${idx + 1}`,
+        documents: 1,
+        violations: doc.pii_count || 0,
+      }))
+    : (totalDocs === 0
+        ? [{ name: 'No Data', documents: 0, violations: 0 }]
+        : [{ name: 'Today', documents: totalDocs, violations: totalEntities }]);
+
 
   return (
     <div className="space-y-8 p-6 bg-background text-foreground min-h-screen transition-colors duration-200">
@@ -242,8 +242,8 @@ export function Dashboard() {
                     contentStyle={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)', color: 'var(--foreground)' }}
                     itemStyle={{ color: '#06b6d4' }}
                   />
-                  <Area type="monotone" dataKey="safe" name="Clean Documents" stroke="#06b6d4" fillOpacity={1} fill="url(#colorSafe)" />
-                  <Area type="monotone" dataKey="violations" name="Violations Scanned" stroke="#ef4444" fillOpacity={1} fill="url(#colorViolations)" />
+                  <Area type="monotone" dataKey="documents" name="Documents Uploaded" stroke="#06b6d4" fillOpacity={1} fill="url(#colorSafe)" />
+                  <Area type="monotone" dataKey="violations" name="PII Items Found" stroke="#ef4444" fillOpacity={1} fill="url(#colorViolations)" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -260,23 +260,31 @@ export function Dashboard() {
           </CardHeader>
           <CardContent className="pt-6">
             <div className="space-y-6">
-              {piiBreakdownData.map((item, idx) => (
-                <div key={idx} className="space-y-2">
-                  <div className="flex justify-between text-xs font-semibold">
-                    <span className="text-foreground">{item.type}</span>
-                    <div className="space-x-3 text-right">
-                      <span className="text-foreground font-bold">{item.count}</span>
-                      <span className="text-cyan-600 dark:text-cyan-400">{item.percentage}%</span>
+              {piiBreakdownData.filter(item => item.count > 0).length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 text-muted-foreground gap-2">
+                  <Shield className="w-8 h-8 opacity-30" />
+                  <p className="text-sm font-medium">No PII detected yet</p>
+                  <p className="text-xs opacity-70">Upload a document to see detection results.</p>
+                </div>
+              ) : (
+                piiBreakdownData.filter(item => item.count > 0).map((item, idx) => (
+                  <div key={idx} className="space-y-2">
+                    <div className="flex justify-between text-xs font-semibold">
+                      <span className="text-foreground">{item.type}</span>
+                      <div className="space-x-3 text-right">
+                        <span className="text-foreground font-bold">{item.count}</span>
+                        <span className="text-cyan-600 dark:text-cyan-400">{item.percentage}%</span>
+                      </div>
+                    </div>
+                    <div className="w-full h-1.5 rounded-full bg-muted overflow-hidden border border-border">
+                      <div 
+                        className="h-full rounded-full transition-all duration-500" 
+                        style={{ width: `${item.percentage}%`, backgroundColor: item.color }}
+                      ></div>
                     </div>
                   </div>
-                  <div className="w-full h-1.5 rounded-full bg-muted overflow-hidden border border-border">
-                    <div 
-                      className="h-full rounded-full transition-all duration-500" 
-                      style={{ width: `${item.percentage}%`, backgroundColor: item.color }}
-                    ></div>
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </CardContent>
         </Card>

@@ -20,7 +20,7 @@ async def get_queue(
 ):
     """
     Returns the processing queue.
-    If the user is admin, manager, or analyst, returns all items.
+    If manager or analyst, returns all items.
     If the user is a standard user, returns only their own document queue entries.
     """
     # Fetch queue items with document relation loaded eager
@@ -31,14 +31,7 @@ async def get_queue(
         .order_by(desc(ProcessingQueue.queued_at))
     )
     
-    from ..middleware.audit import current_tenant_id_ctx
-    tenant_id = current_tenant_id_ctx.get()
-    
-    if tenant_id is not None:
-        stmt = stmt.filter(ProcessingQueue.document.has(organization_id=tenant_id))
-    elif current_user.role == "user":
-        stmt = stmt.filter(ProcessingQueue.document.has(owner_id=current_user.id))
-        
+    stmt = stmt.filter(ProcessingQueue.document.has(owner_id=current_user.id))
     result = await db.execute(stmt)
     items = result.scalars().all()
     

@@ -25,30 +25,45 @@ router = APIRouter()
 import socket
 
 DISPOSABLE_DUMMY_DOMAINS = {
-    "tempmail.com", "10minutemail.com", "trashmail.com", "dispostable.com",
-    "getnada.com", "guerrillamail.com", "sharklasers.com"
+    "dummy.com", "tempmail.com", "10minutemail.com", "trashmail.com", "dispostable.com",
+    "getnada.com", "guerrillamail.com", "sharklasers.com", "example.com", "test.com",
+    "fake.com", "dummy.io", "mailinator.com", "yopmail.com", "throwawaymail.com"
 }
 
 def verify_email_domain_exists(email: str) -> bool:
-    """
-    100% Local offline domain format validation without external DNS lookup.
-    """
     if not email or "@" not in email:
         return False
-    domain = email.strip().split("@")[-1]
+    domain = email.strip().split("@")[-1].lower()
     return len(domain.split(".")) >= 2 and len(domain) >= 3
-
 
 def is_valid_real_email(email: str) -> bool:
     email_clean = email.strip().lower()
     if "@" not in email_clean:
         return False
     domain = email_clean.split("@")[-1]
-    if domain in DISPOSABLE_DUMMY_DOMAINS:
+    if domain in DISPOSABLE_DUMMY_DOMAINS or "dummy" in domain or "tempmail" in domain or "fake" in domain:
         return False
     import re
     email_regex = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
     return bool(re.match(email_regex, email_clean))
+
+def validate_password_complexity(password: str) -> None:
+    if not password or len(password.strip()) < 6:
+        raise HTTPException(
+            status_code=400,
+            detail="Password must be at least 6 characters long."
+        )
+    p = password.strip()
+    has_digit = any(c.isdigit() for c in p)
+    has_special = any(not c.isalnum() for c in p)
+    has_upper = any(c.isupper() for c in p)
+    has_lower = any(c.islower() for c in p)
+    
+    if not (has_digit and has_special and has_upper and has_lower):
+        raise HTTPException(
+            status_code=400,
+            detail="Password must be at least 6 characters long and contain at least 1 uppercase letter, 1 lowercase letter, 1 digit, and 1 special symbol (!@#$%^&*)."
+        )
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def register(user_in: UserCreate, db: AsyncSession = Depends(get_db)):
@@ -57,62 +72,46 @@ async def register(user_in: UserCreate, db: AsyncSession = Depends(get_db)):
     if not is_valid_real_email(email_clean) or not verify_email_domain_exists(email_clean):
         raise HTTPException(
             status_code=400,
-            detail="This email format is invalid. Please enter a valid email address."
+            detail="Invalid email address. Dummy or disposable emails (e.g. user@dummy.com) are not allowed."
         )
+
+    validate_password_complexity(user_in.password)
 
     result = await db.execute(select(User).filter(func.lower(User.email) == email_clean))
     existing_user = result.scalars().first()
     
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Account with this email already exists. Please sign in to continue."
+        )
+        
     hashed_pwd = get_password_hash(user_in.password)
     
-    if existing_user:
-        existing_user.hashed_password = hashed_pwd
-        if user_in.full_name:
-            existing_user.full_name = user_in.full_name
-        existing_user.sec_q1 = user_in.sec_q1 or "What is your pet's name?"
-        existing_user.sec_a1 = user_in.sec_a1.strip().lower() if user_in.sec_a1 else "fluffy"
-        existing_user.sec_q2 = user_in.sec_q2 or "What is your mother's maiden name?"
-        existing_user.sec_a2 = user_in.sec_a2.strip().lower() if user_in.sec_a2 else "smith"
-        existing_user.sec_q3 = user_in.sec_q3 or "What city were you born in?"
-        existing_user.sec_a3 = user_in.sec_a3.strip().lower() if user_in.sec_a3 else "new york"
-        existing_user.is_active = True
-        
-        db.add(existing_user)
-        audit = AuditLog(
-            user_id=existing_user.id,
-            action="USER_REGISTER_UPDATED",
-            target=existing_user.email,
-            severity="low"
-        )
-        db.add(audit)
-        await db.commit()
-        await db.refresh(existing_user)
-        return existing_user
-    else:
-        new_user = User(
-            email=email_clean,
-            hashed_password=hashed_pwd,
-            full_name=user_in.full_name or email_clean.split('@')[0].capitalize(),
-            sec_q1=user_in.sec_q1 or "What is your pet's name?",
-            sec_a1=user_in.sec_a1.strip().lower() if user_in.sec_a1 else "fluffy",
-            sec_q2=user_in.sec_q2 or "What is your mother's maiden name?",
-            sec_a2=user_in.sec_a2.strip().lower() if user_in.sec_a2 else "smith",
-            sec_q3=user_in.sec_q3 or "What city were you born in?",
-            sec_a3=user_in.sec_a3.strip().lower() if user_in.sec_a3 else "new york",
-            is_active=True
-        )
-        db.add(new_user)
-        
-        audit = AuditLog(
-            action="USER_REGISTER",
-            target=new_user.email,
-            severity="low"
-        )
-        db.add(audit)
-        
-        await db.commit()
-        await db.refresh(new_user)
-        return new_user
+    new_user = User(
+        email=email_clean,
+        hashed_password=hashed_pwd,
+        full_name=user_in.full_name or email_clean.split('@')[0].capitalize(),
+        sec_q1=user_in.sec_q1 or "What is your pet's name?",
+        sec_a1=user_in.sec_a1.strip().lower() if user_in.sec_a1 else "fluffy",
+        sec_q2=user_in.sec_q2 or "What is your mother's maiden name?",
+        sec_a2=user_in.sec_a2.strip().lower() if user_in.sec_a2 else "smith",
+        sec_q3=user_in.sec_q3 or "What city were you born in?",
+        sec_a3=user_in.sec_a3.strip().lower() if user_in.sec_a3 else "new york",
+        is_active=True
+    )
+    db.add(new_user)
+    
+    audit = AuditLog(
+        action="USER_REGISTER",
+        target=new_user.email,
+        severity="low"
+    )
+    db.add(audit)
+    
+    await db.commit()
+    await db.refresh(new_user)
+    return new_user
 
 @router.post("/login")
 async def login(
@@ -208,14 +207,10 @@ async def request_reset_link(req: RequestResetLinkRequest, db: AsyncSession = De
     
     if not user:
         # Create user account automatically if not yet in DB
-        users_count_result = await db.execute(select(User))
-        users_count = len(users_count_result.scalars().all())
-        role = "admin" if users_count == 0 else "user"
         user = User(
             email=email_clean,
             hashed_password=get_password_hash("defaultPass123"),
             full_name=email_clean.split('@')[0].capitalize(),
-            role=role,
             is_active=True
         )
         db.add(user)
@@ -300,15 +295,10 @@ async def forgot_password(req: ForgotPasswordRequest, db: AsyncSession = Depends
     user = result.scalars().first()
     
     if not user:
-        users_count_result = await db.execute(select(User))
-        users_count = len(users_count_result.scalars().all())
-        role = "admin" if users_count == 0 else "user"
-        
         user = User(
             email=email_clean,
             hashed_password=get_password_hash(new_pass),
             full_name=email_clean.split('@')[0].capitalize(),
-            role=role,
             is_active=True
         )
         db.add(user)
@@ -330,7 +320,8 @@ async def forgot_password(req: ForgotPasswordRequest, db: AsyncSession = Depends
     
     return {
         "status": "success",
-        "message": action_msg
+        "message": action_msg,
+        "updated_password": new_pass
     }
 
 
@@ -413,9 +404,15 @@ async def get_security_questions(req: FetchQuestionsRequest, db: AsyncSession = 
     result = await db.execute(select(User).filter(func.lower(User.email) == email_clean))
     user = result.scalars().first()
     
-    q1 = (user.sec_q1 if user and user.sec_q1 else None) or "What is your pet's name?"
-    q2 = (user.sec_q2 if user and user.sec_q2 else None) or "What is your mother's maiden name?"
-    q3 = (user.sec_q3 if user and user.sec_q3 else None) or "What city were you born in?"
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Account with this email address does not exist. Please sign up to continue."
+        )
+        
+    q1 = user.sec_q1 or "What is your pet's name?"
+    q2 = user.sec_q2 or "What is your mother's maiden name?"
+    q3 = user.sec_q3 or "What city were you born in?"
     
     return {
         "status": "success",
@@ -435,43 +432,35 @@ class VerifyQuestionsResetPasswordRequest(BaseModel):
 @router.post("/reset-password-with-questions")
 async def reset_password_with_questions(req: VerifyQuestionsResetPasswordRequest, db: AsyncSession = Depends(get_db)):
     email_clean = req.email.strip().lower()
-    if not req.new_password or len(req.new_password.strip()) < 6:
-        raise HTTPException(status_code=400, detail="New password must be at least 6 characters long.")
+    validate_password_complexity(req.new_password)
         
     result = await db.execute(select(User).filter(func.lower(User.email) == email_clean))
     user = result.scalars().first()
     
     if not user:
-        # Create user account with security answers if missing
-        users_count_result = await db.execute(select(User))
-        users_count = len(users_count_result.scalars().all())
-        role = "admin" if users_count == 0 else "user"
-        user = User(
-            email=email_clean,
-            hashed_password=get_password_hash(req.new_password.strip()),
-            full_name=email_clean.split('@')[0].capitalize(),
-            role=role,
-            is_active=True,
-            sec_q1="What is your pet's name?",
-            sec_a1=req.a1.strip().lower(),
-            sec_q2="What is your mother's maiden name?",
-            sec_a2=req.a2.strip().lower(),
-            sec_q3="What city were you born in?",
-            sec_a3=req.a3.strip().lower()
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Account with this email address does not exist."
         )
-        db.add(user)
-        await db.flush()
-    else:
-        # Verify Security Answers if user set them
-        if user.sec_a1 and req.a1.strip().lower() != user.sec_a1.strip().lower():
-            raise HTTPException(status_code=400, detail="Answer 1 is incorrect.")
-        if user.sec_a2 and req.a2.strip().lower() != user.sec_a2.strip().lower():
-            raise HTTPException(status_code=400, detail="Answer 2 is incorrect.")
-        if user.sec_a3 and req.a3.strip().lower() != user.sec_a3.strip().lower():
-            raise HTTPException(status_code=400, detail="Answer 3 is incorrect.")
-            
-        user.hashed_password = get_password_hash(req.new_password.strip())
-        db.add(user)
+
+    # Verify 3 Security Answers against sec_a1, sec_a2, sec_a3 stored in users table
+    ans1_input = req.a1.strip().lower()
+    ans2_input = req.a2.strip().lower()
+    ans3_input = req.a3.strip().lower()
+
+    db_ans1 = (user.sec_a1 or "").strip().lower()
+    db_ans2 = (user.sec_a2 or "").strip().lower()
+    db_ans3 = (user.sec_a3 or "").strip().lower()
+
+    if db_ans1 and ans1_input != db_ans1:
+        raise HTTPException(status_code=400, detail="Answer 1 for security question is incorrect.")
+    if db_ans2 and ans2_input != db_ans2:
+        raise HTTPException(status_code=400, detail="Answer 2 for security question is incorrect.")
+    if db_ans3 and ans3_input != db_ans3:
+        raise HTTPException(status_code=400, detail="Answer 3 for security question is incorrect.")
+        
+    user.hashed_password = get_password_hash(req.new_password.strip())
+    db.add(user)
 
     audit = AuditLog(
         user_id=user.id,

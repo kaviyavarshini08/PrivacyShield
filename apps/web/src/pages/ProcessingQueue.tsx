@@ -42,7 +42,7 @@ export function ProcessingQueue() {
           name: item.document?.original_name || 'Unnamed Document',
           status: status,
           pii: item.pii_found_count !== undefined && item.pii_found_count !== null ? item.pii_found_count : null,
-          uploader: item.document?.owner_id ? `User #${item.document.owner_id}` : 'System Admin',
+          uploader: item.document?.owner_id ? `User #${item.document.owner_id}` : 'System',
           time: timeStr
         };
       });

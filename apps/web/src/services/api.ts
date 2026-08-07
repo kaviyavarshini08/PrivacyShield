@@ -43,30 +43,27 @@ apiClient.interceptors.response.use(
 
     if (error.code === 'ECONNABORTED') {
       toast.error('Request timed out. Please try again.');
-    } else if (!error.response) {
-      toast.error('Network error. Please check your connection.');
-    } else if (error.response.status === 401) {
+    } else if (!error.response && error.code !== 'ERR_CANCELED') {
+      console.warn('Network/Connection issue with backend:', error);
+    } else if (error.response?.status === 401) {
       const requestUrl: string = error.config?.url || '';
       if (requestUrl.includes('/auth/login')) {
         return Promise.reject(error);
       }
-      const token = localStorage.getItem('privacy_shield_token');
-      if (!token && window.location.pathname !== '/login') {
-        localStorage.removeItem('privacy_shield_user');
-        localStorage.removeItem('privacy_shield_token');
+      localStorage.removeItem('privacy_shield_user');
+      localStorage.removeItem('privacy_shield_token');
+      if (window.location.pathname !== '/login') {
         window.location.href = '/login';
-      } else {
-        console.warn('Suppressing unauthenticated redirect for API request:', requestUrl);
       }
-    } else if (error.response.status === 500) {
+    } else if (error.response?.status === 500) {
       toast.error('Server error occurred. Our team has been notified.');
-    } else if (error.response.status === 404) {
+    } else if (error.response?.status === 404) {
       if (requestUrl.includes('/auth/login')) {
         return Promise.reject(error);
       }
       console.warn('API Endpoint Not Found (404):', error.config?.url);
     } else {
-      const message = error.response.data?.detail;
+      const message = error.response?.data?.detail;
       if (message && typeof message === 'string' && message.toLowerCase() !== 'not found') {
         toast.error(message);
       }
@@ -103,13 +100,6 @@ export const ComplianceService = {
   getReport: (docId: number) => apiClient.get(`/compliance/${docId}`),
 };
 
-export const AdminService = {
-  getUsers: () => apiClient.get('/admin/users'),
-  createUser: (data: { email: string; full_name: string; role: string }) => apiClient.post('/admin/users', data),
-  getSecurityPolicies: () => apiClient.get('/admin/security-policies'),
-  updateSecurityPolicies: (policies: { mfa_enabled?: boolean; auto_lock?: boolean; strict_upload?: boolean }) =>
-    apiClient.put('/admin/security-policies', policies),
-};
 
 export const AnalysisService = {
   getAnalysis: (id: string) => apiClient.get(`/analysis/${id}`),
@@ -171,99 +161,27 @@ export const AuthService = {
       };
     }
   },
-  getSecurityQuestions: async (email: string) => {
-    try {
-      return await apiClient.post('/auth/get-security-questions', { email });
-    } catch (err) {
-      return {
-        data: {
-          status: "success",
-          email,
-          q1: "What is your pet's name?",
-          q2: "What is your mother's maiden name?",
-          q3: "What city were you born in?"
-        }
-      };
-    }
-  },
-  resetPasswordWithQuestions: async (data: {
+  getSecurityQuestions: (email: string) => apiClient.post('/auth/get-security-questions', { email }),
+  resetPasswordWithQuestions: (data: {
     email: string;
     a1: string;
     a2: string;
     a3: string;
     new_password: string;
-  }) => {
-    try {
-      return await apiClient.post('/auth/reset-password-with-questions', data);
-    } catch (err: any) {
-      console.warn("Fallback resetPasswordWithQuestions triggered:", err);
-      return {
-        data: {
-          status: "success",
-          message: "Security answers verified! Password updated in database successfully!"
-        }
-      };
-    }
-  },
+  }) => apiClient.post('/auth/reset-password-with-questions', data),
   getProfile: () => apiClient.get('/auth/me'),
   updateProfile: (data: { full_name?: string; email?: string }) => apiClient.put('/auth/profile', data),
-  changePassword: async (data: { current_password: string; new_password: string }) => {
-    try {
-      return await apiClient.post('/auth/change-password', data);
-    } catch (err) {
-      console.warn("Backend change-password endpoint fallback triggered:", err);
-      return {
-        data: {
-          status: "success",
-          message: "Password updated in database successfully!"
-        }
-      };
-    }
-  },
-  requestResetLink: async (email: string) => {
-    try {
-      return await apiClient.post('/auth/request-reset-link', { email });
-    } catch (err) {
-      console.warn("Backend request-reset-link endpoint fallback triggered:", err);
-      const mockToken = `reset_token_${Date.now()}_${encodeURIComponent(email)}`;
-      return {
-        data: {
-          status: "success",
-          message: `Magic reset link generated & sent to ${email}`,
-          reset_link: `http://localhost:5173/reset-password?token=${mockToken}`,
-          token: mockToken
-        }
-      };
-    }
-  },
-  confirmResetPassword: async (token: string, newPassword: string) => {
-    try {
-      return await apiClient.post('/auth/reset-password-confirm', { token, new_password: newPassword });
-    } catch (err) {
-      console.warn("Backend reset-password-confirm endpoint fallback triggered:", err);
-      return {
-        data: {
-          status: "success",
-          message: "Password updated in database successfully!"
-        }
-      };
-    }
-  },
-  forgotPassword: async (email: string, newPassword?: string) => {
-    try {
-      return await apiClient.post('/auth/forgot-password', { email, new_password: newPassword });
-    } catch (err) {
-      console.warn("Backend forgot-password endpoint fallback triggered:", err);
-      return {
-        data: {
-          status: "success",
-          message: `Password for ${email} updated successfully!`
-        }
-      };
-    }
-  },
+  changePassword: (data: { current_password: string; new_password: string }) => 
+    apiClient.post('/auth/change-password', data),
+  requestResetLink: (email: string) => 
+    apiClient.post('/auth/request-reset-link', { email }),
+  confirmResetPassword: (token: string, newPassword: string) => 
+    apiClient.post('/auth/reset-password-confirm', { token, new_password: newPassword }),
+  forgotPassword: (email: string, newPassword?: string) => 
+    apiClient.post('/auth/forgot-password', { email, new_password: newPassword }),
   logout: () => {
     localStorage.removeItem('privacy_shield_token');
+    localStorage.removeItem('privacy_shield_user');
   },
 };
 

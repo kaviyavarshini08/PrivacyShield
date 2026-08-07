@@ -31,7 +31,7 @@ class Settings(BaseSettings):
             import socket
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.settimeout(0.5)
-            result = sock.connect_ex(('localhost', 5432))
+            result = sock.connect_ex((self.POSTGRES_SERVER, 5432))
             sock.close()
             if result == 0:
                 return f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}/{self.POSTGRES_DB}"
@@ -50,7 +50,7 @@ class Settings(BaseSettings):
             import socket
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.settimeout(0.5)
-            result = sock.connect_ex(('localhost', 5432))
+            result = sock.connect_ex((self.POSTGRES_SERVER, 5432))
             sock.close()
             if result == 0:
                 return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}/{self.POSTGRES_DB}"

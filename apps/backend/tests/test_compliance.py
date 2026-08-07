@@ -5,19 +5,13 @@ from app.core.security_compliance import check_impossible_travel, haversine_dist
 from app.core.rag import TextSplitter
 
 def test_rbac_inheritance():
-    # Admin should inherit everything
-    admin_perms = get_role_permissions("admin")
-    assert Permission.BILLING_MANAGE in admin_perms
-    assert Permission.ORGANIZATION_ADMIN in admin_perms
-    assert Permission.TEAM_INVITE in admin_perms
-    assert Permission.DOCUMENT_VIEW in admin_perms
     
     # Manager should inherit analyst + user
     manager_perms = get_role_permissions("manager")
     assert Permission.TEAM_INVITE in manager_perms
     assert Permission.COMPLIANCE_EXPORT in manager_perms
     assert Permission.DOCUMENT_VIEW in manager_perms
-    assert Permission.BILLING_MANAGE not in manager_perms
+    assert Permission.BILLING_MANAGE in manager_perms
     
     # User should only have base permissions
     user_perms = get_role_permissions("user")

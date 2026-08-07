@@ -69,11 +69,6 @@ const MOCK_COMPLIANCE = {
   ]
 };
 
-const MOCK_USERS = [
-  { id: 1, full_name: 'Admin Operator', email: 'admin@privacyshield.com', role: 'admin' },
-  { id: 2, full_name: 'Security Analyst', email: 'analyst@privacyshield.com', role: 'analyst' },
-  { id: 3, full_name: 'Compliance Auditor', email: 'auditor@privacyshield.com', role: 'auditor' },
-];
 
 const MOCK_BILLING = {
   tier: 'Pro Plan',
@@ -215,19 +210,6 @@ export const useComplianceOverview = () => {
   });
 };
 
-export const useAdminUsers = () => {
-  return useQuery({
-    queryKey: ['adminUsers'],
-    queryFn: async () => {
-      try {
-        const response = await api.get('/admin/users');
-        return response.data;
-      } catch (err) {
-        return MOCK_USERS;
-      }
-    }
-  });
-};
 
 export const useBillingStatus = () => {
   return useQuery({

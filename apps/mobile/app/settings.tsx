@@ -34,7 +34,6 @@ export default function SettingsScreen() {
           <Text style={styles.sectionTitle}>User Account Profile</Text>
           <Text style={styles.userVal}>Operator Name: {user?.fullName || 'Security Operator'}</Text>
           <Text style={styles.userVal}>Email: {user?.email || 'operator@privacyshield.com'}</Text>
-          <Text style={styles.userVal}>Role: {user?.role || 'Admin'}</Text>
         </GlassCard>
 
         {/* Security Controls */}

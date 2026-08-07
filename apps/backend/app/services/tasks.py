@@ -183,7 +183,7 @@ def process_document_task(document_id: int):
             # Calibrate confidence score dynamically based on historic false positive reports
             calibrated_score = calibrate_confidence_sync(
                 db=db,
-                organization_id=doc.organization_id,
+                organization_id=None,
                 entity_type=entity_type,
                 text=entity_text,
                 raw_confidence=raw_conf
@@ -236,7 +236,6 @@ def process_document_task(document_id: int):
         # Audit Log
         audit = AuditLog(
             user_id=doc.owner_id,
-            organization_id=doc.organization_id,
             action="DOCUMENT_SCAN_COMPLETED",
             target=doc.original_name,
             severity="medium" if pii_count > 0 else "low"

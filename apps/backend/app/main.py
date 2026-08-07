@@ -8,7 +8,7 @@ import time
 import logging
 
 from .database import engine, Base, AsyncSessionLocal, redis_client
-from .routers import auth, upload, queue, analysis, compliance, chat, teams, billing, analytics, admin
+from .routers import auth, upload, queue, analysis, compliance, chat, teams, billing, analytics
 from .core.config import settings
 from .core.logging import setup_logging, correlation_id_ctx
 from .middleware.security import RequestTracingMiddleware, SecureHeadersMiddleware, RedisRateLimitMiddleware
@@ -70,6 +70,7 @@ ALLOWED_ORIGINS = os.getenv(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
+    allow_origin_regex=r"https?://.*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -122,7 +123,6 @@ app.include_router(chat.router, prefix=f"{settings.API_V1_STR}/chat", tags=["AI 
 app.include_router(teams.router, prefix=f"{settings.API_V1_STR}/teams", tags=["Team Workspaces"])
 app.include_router(billing.router, prefix=f"{settings.API_V1_STR}/billing", tags=["Stripe Billing"])
 app.include_router(analytics.router, prefix=f"{settings.API_V1_STR}/analytics", tags=["Analytics Hub"])
-app.include_router(admin.router, prefix=f"{settings.API_V1_STR}/admin", tags=["Admin Portal"])
 
 
 # 7. Health Check Probes

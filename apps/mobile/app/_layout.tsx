@@ -46,7 +46,6 @@ export default function RootLayout() {
             <Stack.Screen name="billing" />
             <Stack.Screen name="compliance" />
             <Stack.Screen name="analytics" />
-            <Stack.Screen name="admin" />
             <Stack.Screen name="settings" />
           </Stack>
         </PaperProvider>

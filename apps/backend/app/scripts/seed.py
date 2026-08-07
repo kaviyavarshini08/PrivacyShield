@@ -28,34 +28,7 @@ def seed_db():
         else:
             print("Default organization already exists.")
             
-        # 2. Provision Admin Users
-        admin_company = db.query(User).filter(User.email == "admin@company.com").first()
-        if not admin_company:
-            admin_company = User(
-                email="admin@company.com",
-                hashed_password=get_password_hash("adminpassword123"),
-                full_name="Global Systems Admin",
-                role="admin",
-                organization_id=org.id,
-                is_active=True
-            )
-            db.add(admin_company)
-            print(f"Provisioned Admin user: {admin_company.email} (pass: adminpassword123)")
-            
-        admin_simple = db.query(User).filter(User.email == "admin@privacyshield.com").first()
-        if not admin_simple:
-            admin_simple = User(
-                email="admin@privacyshield.com",
-                hashed_password=get_password_hash("admin"),
-                full_name="Demo Administrator",
-                role="admin",
-                organization_id=org.id,
-                is_active=True
-            )
-            db.add(admin_simple)
-            print(f"Provisioned Admin user: {admin_simple.email} (pass: admin)")
-            
-        # 3. Provision Security Analyst Users
+        # 2. Provision Security Analyst Users
         analyst_company = db.query(User).filter(User.email == "analyst@company.com").first()
         if not analyst_company:
             analyst_company = User(

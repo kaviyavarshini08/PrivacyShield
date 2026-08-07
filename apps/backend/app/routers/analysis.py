@@ -10,6 +10,7 @@ import json
 import csv
 import io
 import logging
+import httpx
 
 from ..database import get_db
 from ..models.models import Document, DetectedEntity, User, AuditLog
@@ -66,51 +67,15 @@ async def get_review_queue(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Fetches all detected PII entities within the workspace documents for human-in-the-loop review.
+    Fetches all detected PII entities within the user's documents for review.
     """
-    stmt = select(DetectedEntity).join(Document, Document.id == DetectedEntity.document_id)
+    stmt = (
+        select(DetectedEntity)
+        .join(Document, Document.id == DetectedEntity.document_id)
+        .filter(Document.owner_id == current_user.id)
+    )
     res = await db.execute(stmt)
     entities = res.scalars().all()
-
-    pending_entities = [e for e in entities if e.review_status in [None, "pending"]]
-    target_entities = pending_entities if pending_entities else entities
-
-    if not target_entities:
-        return [
-            {
-                "id": 901,
-                "document_id": 1,
-                "entity_type": "IN_AADHAAR",
-                "text": "9842 1029 4819",
-                "confidence": 0.94,
-                "review_status": "pending",
-                "page_number": 1,
-                "attribution": "regex",
-                "reason": "Matched Indian national Aadhaar identifier pattern check (12-digit sequence)."
-            },
-            {
-                "id": 902,
-                "document_id": 1,
-                "entity_type": "IN_PAN",
-                "text": "ABCDE1234F",
-                "confidence": 0.92,
-                "review_status": "pending",
-                "page_number": 1,
-                "attribution": "regex",
-                "reason": "Matched Indian Income Tax PAN identifier pattern rules."
-            },
-            {
-                "id": 903,
-                "document_id": 2,
-                "entity_type": "EMAIL_ADDRESS",
-                "text": "user.security@privacyshield.io",
-                "confidence": 0.98,
-                "review_status": "pending",
-                "page_number": 1,
-                "attribution": "ai",
-                "reason": "Detected standard internet email domain routing format."
-            }
-        ]
 
     return [
         {
@@ -124,7 +89,7 @@ async def get_review_queue(
             "attribution": getattr(e, "attribution", "regex") or "regex",
             "reason": getattr(e, "reason", "Identified as sensitive parameter block.") or "Identified as sensitive parameter block."
         }
-        for e in target_entities
+        for e in entities
     ]
 
 @router.post("/review/{entity_id}/approve")
@@ -202,13 +167,13 @@ async def get_analysis(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    stmt = tenant_select(Document).filter(Document.id == document_id)
+    stmt = select(Document).filter(Document.id == document_id)
     result = await db.execute(stmt)
     doc = result.scalars().first()
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
 
-    if current_user.role not in ["admin", "manager", "analyst"] and doc.owner_id != current_user.id:
+    if doc.owner_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not authorized to access this document")
 
     entity_stmt = select(DetectedEntity).filter(DetectedEntity.document_id == document_id)
@@ -224,13 +189,13 @@ async def redact_document(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    stmt = tenant_select(Document).filter(Document.id == document_id)
+    stmt = select(Document).filter(Document.id == document_id)
     result = await db.execute(stmt)
     doc = result.scalars().first()
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
 
-    if current_user.role not in ["admin", "manager"] and doc.owner_id != current_user.id:
+    if doc.owner_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not authorized to redact this document")
 
     # Fetch entities to redact
@@ -331,8 +296,6 @@ async def redact_document(
         # Update entity redaction states in database
         for entity in entities:
             entity.is_redacted = True
-            log = RedactionLog(document_id=doc.id, entity_id=entity.id, status="redacted")
-            db.add(log)
 
         doc.redacted_storage_path = redacted_path
         doc.is_encrypted = True
@@ -364,13 +327,13 @@ async def get_preview(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    stmt = tenant_select(Document).filter(Document.id == document_id)
+    stmt = select(Document).filter(Document.id == document_id)
     result = await db.execute(stmt)
     doc = result.scalars().first()
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
 
-    if current_user.role not in ["admin", "manager", "analyst"] and doc.owner_id != current_user.id:
+    if doc.owner_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not authorized")
 
     if not os.path.exists(doc.storage_path):
@@ -384,13 +347,13 @@ async def get_download_redacted(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    stmt = tenant_select(Document).filter(Document.id == document_id)
+    stmt = select(Document).filter(Document.id == document_id)
     result = await db.execute(stmt)
     doc = result.scalars().first()
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
 
-    if current_user.role not in ["admin", "manager", "analyst"] and doc.owner_id != current_user.id:
+    if doc.owner_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not authorized")
 
     if not doc.redacted_storage_path or not os.path.exists(doc.redacted_storage_path):
@@ -408,13 +371,13 @@ async def get_audit_report(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    stmt = tenant_select(Document).filter(Document.id == document_id)
+    stmt = select(Document).filter(Document.id == document_id)
     result = await db.execute(stmt)
     doc = result.scalars().first()
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
 
-    if current_user.role not in ["admin", "manager", "analyst"] and doc.owner_id != current_user.id:
+    if doc.owner_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not authorized")
 
     entity_stmt = select(DetectedEntity).filter(DetectedEntity.document_id == document_id)

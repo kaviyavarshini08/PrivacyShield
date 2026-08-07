@@ -89,6 +89,26 @@ export function Login() {
     }
   };
 
+  const isValidEmail = (emailStr: string) => {
+    const cleanEmail = emailStr.trim().toLowerCase();
+    const domain = cleanEmail.split('@').pop() || '';
+    const disposableDomains = ['dummy.com', 'tempmail.com', '10minutemail.com', 'trashmail.com', 'example.com', 'test.com', 'fake.com', 'dummy.io', 'mailinator.com', 'yopmail.com'];
+    if (disposableDomains.includes(domain) || domain.includes('dummy') || domain.includes('tempmail') || domain.includes('fake')) {
+      return false;
+    }
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return emailRegex.test(cleanEmail);
+  };
+
+  const isStrongPassword = (pass: string) => {
+    if (pass.length < 6) return false;
+    const hasDigit = /\d/.test(pass);
+    const hasUpper = /[A-Z]/.test(pass);
+    const hasLower = /[a-z]/.test(pass);
+    const hasSpecial = /[^a-zA-Z0-9]/.test(pass);
+    return hasDigit && hasUpper && hasLower && hasSpecial;
+  };
+
   const handleVerifyQuestionsAndReset = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!forgotA1.trim() || !forgotA2.trim() || !forgotA3.trim()) {
@@ -103,8 +123,8 @@ export function Login() {
       toast.error("New password and confirmation password do not match.");
       return;
     }
-    if (forgotNewPass.length < 6) {
-      toast.error("New password must be at least 6 characters long.");
+    if (!isStrongPassword(forgotNewPass)) {
+      toast.error("Password must be at least 6 characters long and contain at least 1 uppercase letter, 1 lowercase letter, 1 digit, and 1 special symbol (!@#$%^&*).");
       return;
     }
 
@@ -147,9 +167,12 @@ export function Login() {
     }
 
     const cleanEmail = signUpEmail.trim().toLowerCase();
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    if (!emailRegex.test(cleanEmail)) {
-      toast.error("Please enter a valid email address.");
+    if (!isValidEmail(cleanEmail)) {
+      toast.error("Invalid email address. Dummy or disposable emails (e.g. user@dummy.com) are not allowed.");
+      return;
+    }
+    if (!isStrongPassword(signUpPassword)) {
+      toast.error("Password must be at least 6 characters long and contain at least 1 uppercase letter, 1 lowercase letter, 1 digit, and 1 special symbol (!@#$%^&*).");
       return;
     }
 
@@ -166,16 +189,10 @@ export function Login() {
         sec_q3: "What city were you born in?",
         sec_a3: signUpA3.trim()
       });
-      toast.success("Account registered successfully! Auto-populating login credentials...");
-      setEmail(cleanEmail);
-      setPassword(signUpPassword);
+      toast.success("Account registered successfully! Logging you in...");
       setShowSignUpModal(false);
-      setSignUpName('');
-      setSignUpEmail('');
-      setSignUpPassword('');
-      setSignUpA1('');
-      setSignUpA2('');
-      setSignUpA3('');
+      await login(cleanEmail, signUpPassword);
+      navigate('/dashboard');
     } catch (err: any) {
       let errDetail = "Registration failed. Please check your details and try again.";
       const detail = err.response?.data?.detail;
@@ -260,7 +277,7 @@ export function Login() {
               <label className="text-sm font-medium">Email Address</label>
               <Input 
                 type="email" 
-                placeholder="admin@company.com" 
+                placeholder="user@company.com" 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required

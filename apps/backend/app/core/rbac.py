@@ -11,7 +11,6 @@ class Permission:
     TEAM_INVITE = "TEAM_INVITE"
     COMPLIANCE_EXPORT = "COMPLIANCE_EXPORT"
     BILLING_MANAGE = "BILLING_MANAGE"
-    ORGANIZATION_ADMIN = "ORGANIZATION_ADMIN"
     AI_FEEDBACK_REVIEW = "AI_FEEDBACK_REVIEW"
 
 # Role permissions definition (base mapping)
@@ -20,7 +19,8 @@ ROLE_PERMISSIONS: Dict[str, Set[str]] = {
         Permission.DOCUMENT_VIEW,
         Permission.DOCUMENT_UPLOAD,
         Permission.REDACTION_APPLY,
-        Permission.AI_FEEDBACK_REVIEW
+        Permission.AI_FEEDBACK_REVIEW,
+        Permission.BILLING_MANAGE
     },
     "analyst": {
         Permission.COMPLIANCE_EXPORT
@@ -29,22 +29,16 @@ ROLE_PERMISSIONS: Dict[str, Set[str]] = {
         Permission.REDACTION_APPLY,
         Permission.TEAM_INVITE,
         Permission.AI_FEEDBACK_REVIEW
-    },
-    "admin": {
-        Permission.BILLING_MANAGE,
-        Permission.ORGANIZATION_ADMIN
     }
 }
 
 # Hierarchical Role Inheritance
 # analyst inherits user
 # manager inherits analyst + user
-# admin inherits manager + analyst + user
 ROLE_INHERITANCE: Dict[str, List[str]] = {
     "user": [],
     "analyst": ["user"],
-    "manager": ["analyst"],
-    "admin": ["manager"]
+    "manager": ["analyst"]
 }
 
 def get_role_permissions(role: str) -> Set[str]:

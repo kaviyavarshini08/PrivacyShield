@@ -99,16 +99,27 @@ export function Settings() {
         current_password: currentPassword,
         new_password: newPassword
       });
-      toast.success("Password updated in database successfully!");
+
+      // Clear fields
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
+
+      // Show countdown toast then auto-logout
+      toast.success("Password updated! Logging you out in 3 seconds…", { duration: 3500 });
+
+      setTimeout(() => {
+        toast.info("Please log in with your new password.");
+        logout();
+      }, 3000);
+
     } catch (err: any) {
       toast.error(err.response?.data?.detail || "Failed to change password. Verify your current password.");
     } finally {
       setIsChangingPass(false);
     }
   };
+
 
   const handleSignOut = () => {
     toast.success("Signed out successfully.");

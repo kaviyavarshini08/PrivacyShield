@@ -34,7 +34,7 @@ async def ask_privacy_assistant(
         doc = doc_result.scalars().first()
         
         if doc:
-            if current_user.role not in ["admin", "manager", "analyst"] and doc.owner_id != current_user.id:
+            if current_user.role not in ["manager", "analyst"] and doc.owner_id != current_user.id:
                 raise HTTPException(status_code=403, detail="Not authorized to access this document context")
             
             doc_name = doc.original_name
@@ -242,7 +242,7 @@ async def investigate_workspace(
                 "- All redacted documents are stored with restricted access and encryption\n"
                 "- Access is logged in the Audit Trail for compliance tracking\n"
                 "- Documents are classified by PII count and encryption status\n\n"
-                "Best Practices: Rotate vault credentials regularly, enable 2FA for admin access, export audit reports."
+                "Best Practices: Rotate vault credentials regularly, enable 2FA for account access, export audit reports."
             )
         else:
             answer = (
