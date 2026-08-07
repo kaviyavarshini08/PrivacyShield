@@ -1,18 +1,37 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { Text, IconButton, Switch, TextInput } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '../src/store/authStore';
+import { useUpdateProfile, useChangePassword } from '../src/api/query';
 import { GlassCard, CyberButton } from '@privacyshield/ui';
 
 export default function SettingsScreen() {
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
+  const checkAuth = useAuthStore((state) => state.checkAuth);
 
   const [mfaEnabled, setMfaEnabled] = useState(true);
   const [autoLock, setAutoLock] = useState(true);
   const [strictUpload, setStrictUpload] = useState(false);
   const [apiKey, setApiKey] = useState('ps_live_9948271038592014');
+
+  // Profile Edit
+  const [fullName, setFullName] = useState(user?.fullName || '');
+  const updateProfile = useUpdateProfile();
+
+  // Password Change
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const changePassword = useChangePassword();
+
+  useEffect(() => {
+    if (user) {
+      setFullName(user.fullName || '');
+    }
+  }, [user]);
 
   const handleGenerateKey = () => {
     const newKey = `ps_live_${Math.random().toString(36).substring(2, 18)}`;
@@ -20,20 +39,141 @@ export default function SettingsScreen() {
     Alert.alert('New API Key Generated', newKey);
   };
 
+  const handleSaveProfile = () => {
+    if (!fullName.trim()) {
+      Alert.alert('Validation Error', 'Please enter a valid full name.');
+      return;
+    }
+    updateProfile.mutate(
+      { full_name: fullName.trim() },
+      {
+        onSuccess: async () => {
+          Alert.alert('Success', 'Profile name updated successfully.');
+          await checkAuth(); // refresh user context
+        },
+        onError: (err: any) => {
+          Alert.alert('Error', err.response?.data?.detail || 'Failed to update profile.');
+        }
+      }
+    );
+  };
+
+  const handleChangePassword = () => {
+    if (!currentPassword || !newPassword) {
+      Alert.alert('Validation Error', 'Please enter current and new password.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      Alert.alert('Validation Error', 'New password and confirmation do not match.');
+      return;
+    }
+    if (newPassword.length < 6) {
+      Alert.alert('Validation Error', 'Password must be at least 6 characters long.');
+      return;
+    }
+
+    changePassword.mutate(
+      { current_password: currentPassword, new_password: newPassword },
+      {
+        onSuccess: () => {
+          Alert.alert('Success', 'Password updated! Please log in with your new password.');
+          setCurrentPassword('');
+          setNewPassword('');
+          setConfirmPassword('');
+          setTimeout(() => {
+            logout();
+            router.replace('/login');
+          }, 1500);
+        },
+        onError: (err: any) => {
+          Alert.alert('Error', err.response?.data?.detail || 'Failed to change password. Verify your current password.');
+        }
+      }
+    );
+  };
+
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView 
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
       <View style={styles.header}>
         <IconButton icon="arrow-left" iconColor="#ffffff" size={24} onPress={() => router.back()} />
         <Text style={styles.headerTitle}>SETTINGS & SECURITY</Text>
         <IconButton icon="cog" iconColor="#3b82f6" size={22} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
         {/* Profile Card */}
+        <Text style={styles.sectionHeader}>Profile Information</Text>
         <GlassCard style={styles.card}>
-          <Text style={styles.sectionTitle}>User Account Profile</Text>
-          <Text style={styles.userVal}>Operator Name: {user?.fullName || 'Security Operator'}</Text>
-          <Text style={styles.userVal}>Email: {user?.email || 'operator@privacyshield.com'}</Text>
+          <TextInput
+            mode="outlined"
+            label="Email Address (Read-only)"
+            value={user?.email || ''}
+            editable={false}
+            outlineColor="rgba(255, 255, 255, 0.1)"
+            textColor="#94a3b8"
+            style={{ backgroundColor: '#0f172a', marginBottom: 12 }}
+          />
+          <TextInput
+            mode="outlined"
+            label="Full Name"
+            value={fullName}
+            onChangeText={setFullName}
+            outlineColor="rgba(59, 130, 246, 0.3)"
+            activeOutlineColor="#3b82f6"
+            textColor="#ffffff"
+            style={{ backgroundColor: '#0f172a', marginBottom: 12 }}
+          />
+          <CyberButton 
+            title={updateProfile.isPending ? "Saving..." : "Save Profile"} 
+            onPress={handleSaveProfile} 
+            disabled={updateProfile.isPending}
+          />
+        </GlassCard>
+
+        {/* Change Password Card */}
+        <Text style={styles.sectionHeader}>Change Password</Text>
+        <GlassCard style={styles.card}>
+          <TextInput
+            mode="outlined"
+            label="Current Password"
+            value={currentPassword}
+            onChangeText={setCurrentPassword}
+            secureTextEntry
+            outlineColor="rgba(59, 130, 246, 0.3)"
+            activeOutlineColor="#3b82f6"
+            textColor="#ffffff"
+            style={{ backgroundColor: '#0f172a', marginBottom: 12 }}
+          />
+          <TextInput
+            mode="outlined"
+            label="New Password"
+            value={newPassword}
+            onChangeText={setNewPassword}
+            secureTextEntry
+            outlineColor="rgba(59, 130, 246, 0.3)"
+            activeOutlineColor="#3b82f6"
+            textColor="#ffffff"
+            style={{ backgroundColor: '#0f172a', marginBottom: 12 }}
+          />
+          <TextInput
+            mode="outlined"
+            label="Confirm New Password"
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            secureTextEntry
+            outlineColor="rgba(59, 130, 246, 0.3)"
+            activeOutlineColor="#3b82f6"
+            textColor="#ffffff"
+            style={{ backgroundColor: '#0f172a', marginBottom: 12 }}
+          />
+          <CyberButton 
+            title={changePassword.isPending ? "Updating..." : "Update Password"} 
+            onPress={handleChangePassword}
+            disabled={changePassword.isPending}
+          />
         </GlassCard>
 
         {/* Security Controls */}
@@ -80,7 +220,7 @@ export default function SettingsScreen() {
           <CyberButton title="Rotate API Key" onPress={handleGenerateKey} variant="secondary" />
         </GlassCard>
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

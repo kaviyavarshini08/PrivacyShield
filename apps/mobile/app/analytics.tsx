@@ -9,9 +9,55 @@ export default function AnalyticsScreen() {
   const router = useRouter();
   const { data: analytics, isLoading, refetch } = useAnalytics();
 
-  const totalScans = analytics?.total_scanned || 128;
-  const piiCount = analytics?.pii_detected_count || 342;
+  const totalScans = analytics?.total_documents || analytics?.total_scanned || 0;
+  const piiCount = analytics?.total_entities_found || analytics?.pii_detected_count || 0;
   const threatScore = analytics?.threat_score || 'Low';
+
+  const entityCounts: Record<string, number> = analytics?.entity_counts || {};
+  
+  const getEntityCount = (keys: string[]) => {
+    let count = 0;
+    Object.entries(entityCounts).forEach(([k, v]) => {
+      const upperK = k.toUpperCase();
+      if (keys.some(key => upperK.includes(key.toUpperCase()))) {
+        count += Number(v) || 0;
+      }
+    });
+    return count;
+  };
+
+  const aadhaarCount = getEntityCount(['AADHAAR', 'IN_AADHAAR']);
+  const panCount = getEntityCount(['PAN', 'IN_PAN']);
+  const phoneCount = getEntityCount(['PHONE', 'MOBILE', 'PHONE_NUMBER']);
+  const emailCount = getEntityCount(['EMAIL', 'EMAIL_ADDRESS']);
+  const secretCount = getEntityCount(['SECRET', 'KEY', 'API', 'TOKEN', 'CREDENTIAL', 'PASSWORD']);
+
+  const piiBreakdownData = [
+    { name: 'Aadhaar (National ID)', count: aadhaarCount, color: '#06b6d4' },
+    { name: 'PAN Card (Tax ID)', count: panCount, color: '#14b8a6' },
+    { name: 'Phone Number', count: phoneCount, color: '#f59e0b' },
+    { name: 'Email Address', count: emailCount, color: '#10b981' },
+    { name: 'High Entropy Secrets', count: secretCount, color: '#ef4444' },
+  ];
+
+  Object.entries(entityCounts).forEach(([k, v]) => {
+    const cleanName = k.replace('IN_', '').replace('_', ' ');
+    const isAlreadyCategorized = ['AADHAAR', 'PAN', 'PHONE', 'EMAIL', 'SECRET', 'KEY'].some(x => k.toUpperCase().includes(x));
+    if (!isAlreadyCategorized) {
+      piiBreakdownData.push({
+        name: cleanName,
+        count: Number(v) || 0,
+        color: '#8b5cf6'
+      });
+    }
+  });
+
+  const activeCategories = piiBreakdownData
+    .filter(cat => cat.count > 0)
+    .map(cat => ({
+      ...cat,
+      pct: piiCount > 0 ? `${Math.round((cat.count / piiCount) * 100)}%` : '0%'
+    }));
 
   return (
     <View style={styles.container}>
@@ -50,22 +96,23 @@ export default function AnalyticsScreen() {
             {/* PII Entity Breakdown */}
             <Text style={styles.sectionHeader}>PII Category Distribution</Text>
             <GlassCard style={styles.card}>
-              {[
-                { name: 'Social Security Numbers (SSN)', count: 114, pct: '33%', color: '#ef4444' },
-                { name: 'Email & Contact Handles', count: 98, pct: '28%', color: '#3b82f6' },
-                { name: 'Financial & Credit Card Numbers', count: 76, pct: '22%', color: '#f59e0b' },
-                { name: 'Medical & PHI Records', count: 54, pct: '17%', color: '#10b981' },
-              ].map((cat, idx) => (
-                <View key={idx} style={styles.catRow}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.catName}>{cat.name}</Text>
-                    <Text style={styles.catCount}>{cat.count} instances detected</Text>
-                  </View>
-                  <Chip textStyle={{ color: cat.color, fontWeight: 'bold', fontSize: 11 }} style={{ backgroundColor: cat.color + '15' }}>
-                    {cat.pct}
-                  </Chip>
+              {activeCategories.length === 0 ? (
+                <View style={{ alignItems: 'center', paddingVertical: 20 }}>
+                  <Text style={{ color: '#64748b' }}>No PII detected yet.</Text>
                 </View>
-              ))}
+              ) : (
+                activeCategories.map((cat, idx) => (
+                  <View key={idx} style={styles.catRow}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.catName}>{cat.name}</Text>
+                      <Text style={styles.catCount}>{cat.count} instances detected</Text>
+                    </View>
+                    <Chip textStyle={{ color: cat.color, fontWeight: 'bold', fontSize: 11 }} style={{ backgroundColor: cat.color + '15' }}>
+                      {cat.pct}
+                    </Chip>
+                  </View>
+                ))
+              )}
             </GlassCard>
           </>
         )}

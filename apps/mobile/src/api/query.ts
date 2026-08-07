@@ -272,3 +272,30 @@ export const useRejectReview = () => {
     }
   });
 };
+
+export const useUpdateProfile = () => {
+  return useMutation({
+    mutationFn: async (data: { full_name?: string; email?: string }) => {
+      const response = await api.put('/auth/profile', data);
+      return response.data;
+    }
+  });
+};
+
+export const useChangePassword = () => {
+  return useMutation({
+    mutationFn: async (data: { current_password: string; new_password: string }) => {
+      const response = await api.post('/auth/change-password', data);
+      return response.data;
+    }
+  });
+};
+
+export const useResetPassword = () => {
+  return useMutation({
+    mutationFn: async (data: { token: string; new_password: string }) => {
+      const response = await api.post('/auth/reset-password-confirm', data);
+      return response.data;
+    }
+  });
+};
