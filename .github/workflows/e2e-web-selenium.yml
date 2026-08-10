@@ -35,22 +35,12 @@ jobs:
         run: python automated-testing/web-selenium/run_tests.py || python automated-testing/web-selenium/generate_mock_report.py
         continue-on-error: true
 
-      - name: Update Web E2E Report and Create Zip
-        if: always()
-        run: |
-          mkdir -p test-reports
-          if [ ! -f automated-testing/web-selenium/e2e_test_report.xlsx ]; then
-            python automated-testing/web-selenium/generate_mock_report.py
-          fi
-          cp automated-testing/web-selenium/e2e_test_report.xlsx test-reports/web_selenium_e2e_report.xlsx
-          (cd test-reports && zip -r web_selenium_e2e_report.zip ./*)
-
       - name: Upload Web Selenium Test Report Artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: web-selenium-e2e-report
-          path: test-reports/web_selenium_e2e_report.zip
+          path: automated-testing/web-selenium/e2e_test_report.xlsx
 
       - name: Commit and Push Report
         if: always()

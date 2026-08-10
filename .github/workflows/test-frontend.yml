@@ -32,19 +32,9 @@ jobs:
         run: npm run test -w apps/web --if-present
         continue-on-error: true
 
-      - name: Create Frontend Test Report Zip Archive
-        if: always()
-        run: |
-          mkdir -p test-reports
-          if [ -d apps/web/coverage ]; then
-            cp -r apps/web/coverage test-reports/
-          fi
-          echo "Frontend Unit & Lint execution completed." > test-reports/frontend_test_summary.txt
-          (cd test-reports && zip -r frontend_test_report.zip ./*)
-
       - name: Upload Frontend Test Report Artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: frontend-test-report
-          path: test-reports/frontend_test_report.zip
+          path: apps/web/coverage/

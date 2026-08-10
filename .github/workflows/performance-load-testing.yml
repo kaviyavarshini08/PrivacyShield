@@ -35,22 +35,12 @@ jobs:
         run: python tests/load-testing/load_test.py --vus 10 --duration 5 || python tests/load-testing/generate_mock_report.py
         continue-on-error: true
 
-      - name: Update Performance Report and Create Zip
-        if: always()
-        run: |
-          mkdir -p test-reports
-          if [ ! -f tests/load-testing/load_test_report.xlsx ]; then
-            python tests/load-testing/generate_mock_report.py
-          fi
-          cp tests/load-testing/load_test_report.xlsx test-reports/api_load_test_performance_report.xlsx
-          (cd test-reports && zip -r api_load_test_performance_report.zip ./*)
-
       - name: Upload Performance Test Report Artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: api-load-test-performance-report
-          path: test-reports/api_load_test_performance_report.zip
+          path: tests/load-testing/load_test_report.xlsx
 
       - name: Commit and Push Report
         if: always()

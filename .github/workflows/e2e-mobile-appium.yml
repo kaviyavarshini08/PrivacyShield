@@ -57,24 +57,14 @@ jobs:
         run: python apps/mobile/appium-tests/run_tests.py || python apps/mobile/appium-tests/generate_mock_report.py
         continue-on-error: true
 
-      - name: Update Mobile E2E Reports and Create Zip Archive
-        if: always()
-        run: |
-          mkdir -p test-reports
-          if [ -f automated-testing/mobile-appium/mobile_appium_test_report.xlsx ]; then
-            cp automated-testing/mobile-appium/mobile_appium_test_report.xlsx test-reports/mobile_appium_nodejs_e2e_report.xlsx
-          fi
-          if [ -f apps/mobile/appium-tests/mobile_appium_test_report.xlsx ]; then
-            cp apps/mobile/appium-tests/mobile_appium_test_report.xlsx test-reports/mobile_appium_python_e2e_report.xlsx
-          fi
-          (cd test-reports && zip -r mobile_appium_e2e_reports.zip ./*)
-
       - name: Upload Mobile Appium Test Reports Artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: mobile-appium-e2e-reports
-          path: test-reports/mobile_appium_e2e_reports.zip
+          path: |
+            automated-testing/mobile-appium/mobile_appium_test_report.xlsx
+            apps/mobile/appium-tests/mobile_appium_test_report.xlsx
 
       - name: Commit and Push Reports
         if: always()
