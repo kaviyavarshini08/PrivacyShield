@@ -1,0 +1,355 @@
+Run started:2026-08-10 05:20:46.682254+00:00
+
+Test results:
+>> Issue: [B107:hardcoded_password_default] Possible hardcoded password: 'access'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b107_hardcoded_password_default.html
+   Location: apps/backend/app/core/security.py:58:0
+57	
+58	def verify_token(token: str, token_type: str = "access") -> Optional[dict]:
+59	    try:
+60	        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+61	        if payload.get("type") != token_type:
+62	            return None
+63	        return payload
+64	    except JWTError:
+65	        return None
+66	
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html
+   Location: apps/backend/app/middleware/audit.py:35:12
+34	                tenant_id = payload.get("tenant_id")
+35	            except Exception:
+36	                # Fail-silent context parsing, downstream routers will reject invalid tokens
+37	                pass
+38	
+
+--------------------------------------------------
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: 'bearer'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html
+   Location: apps/backend/app/routers/auth.py:194:8
+193	        "refresh_token": refresh_token,
+194	        "token_type": "bearer",
+195	        "user": user
+196	    }
+197	
+198	@router.post("/refresh", response_model=Token)
+199	async def refresh_tokens(req: RefreshTokenRequest, db: AsyncSession = Depends(get_db)):
+200	    payload = verify_token(req.refresh_token, "refresh")
+201	    if not payload:
+
+--------------------------------------------------
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: 'bearer'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html
+   Location: apps/backend/app/routers/auth.py:219:8
+218	        "refresh_token": refresh_token,
+219	        "token_type": "bearer",
+220	        "user": user
+221	    }
+222	
+223	from pydantic import BaseModel
+224	class ForgotPasswordRequest(BaseModel):
+225	    email: str
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html
+   Location: apps/backend/app/routers/chat.py:62:8
+61	            await db.rollback()
+62	        except Exception:
+63	            pass
+64	
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html
+   Location: apps/backend/app/scripts/generate_mock_vulnerability_report.py:40:12
+39	                    max_length = len(cell.value)
+40	            except:
+41	                pass
+42	        adjusted_width = (max_length + 2)
+
+--------------------------------------------------
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: 'password'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html
+   Location: apps/backend/app/scripts/pentest_simulator.py:82:85
+81	        # Querying with standard SQLi payload
+82	        res = await client.get("/api/v1/auth/login", params={"email": "' OR '1'='1", "password": "password"})
+83	        # Should be filtered or return unauthorized (401) / bad request (400), not execute as raw SQL
+
+--------------------------------------------------
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: 'admin'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html
+   Location: apps/backend/app/scripts/pentest_simulator.py:97:8
+96	        "username": "admin@privacyshield.com",
+97	        "password": "admin"
+98	    }
+99	    try:
+100	        res = await client.post("/api/v1/auth/login", data=login_data)
+101	        if res.status_code == 200:
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: apps/backend/tests/test_api.py:12:4
+11	    response = client.get("/")
+12	    assert response.status_code == 200
+13	    data = response.json()
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: apps/backend/tests/test_api.py:14:4
+13	    data = response.json()
+14	    assert "PrivacyShield Enterprise API is running" in data["message"]
+15	    assert data["docs_path"] == "/docs"
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: apps/backend/tests/test_api.py:15:4
+14	    assert "PrivacyShield Enterprise API is running" in data["message"]
+15	    assert data["docs_path"] == "/docs"
+16	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: apps/backend/tests/test_api.py:22:4
+21	    response = client.get("/health/liveness")
+22	    assert response.status_code == 200
+23	    data = response.json()
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: apps/backend/tests/test_api.py:24:4
+23	    data = response.json()
+24	    assert data["status"] == "alive"
+25	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: apps/backend/tests/test_api.py:41:8
+40	        response = client.post("/api/v1/auth/forgot-password", json={"email": "nonexistent_user_xyz@test.com"})
+41	        assert response.status_code == 200
+42	    finally:
+
+--------------------------------------------------
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: 'newsecretpassword123'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html
+   Location: apps/backend/tests/test_api.py:62:98
+61	    try:
+62	        response = client.post("/api/v1/auth/forgot-password", json={"email": "test@example.com", "new_password": "newsecretpassword123"})
+63	        assert response.status_code == 200
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: apps/backend/tests/test_api.py:63:8
+62	        response = client.post("/api/v1/auth/forgot-password", json={"email": "test@example.com", "new_password": "newsecretpassword123"})
+63	        assert response.status_code == 200
+64	        data = response.json()
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: apps/backend/tests/test_api.py:65:8
+64	        data = response.json()
+65	        assert data["status"] == "success"
+66	        assert data["updated_password"] == "newsecretpassword123"
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: apps/backend/tests/test_api.py:66:8
+65	        assert data["status"] == "success"
+66	        assert data["updated_password"] == "newsecretpassword123"
+67	    finally:
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: apps/backend/tests/test_compliance.py:11:4
+10	    manager_perms = get_role_permissions("manager")
+11	    assert Permission.TEAM_INVITE in manager_perms
+12	    assert Permission.COMPLIANCE_EXPORT in manager_perms
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: apps/backend/tests/test_compliance.py:12:4
+11	    assert Permission.TEAM_INVITE in manager_perms
+12	    assert Permission.COMPLIANCE_EXPORT in manager_perms
+13	    assert Permission.DOCUMENT_VIEW in manager_perms
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: apps/backend/tests/test_compliance.py:13:4
+12	    assert Permission.COMPLIANCE_EXPORT in manager_perms
+13	    assert Permission.DOCUMENT_VIEW in manager_perms
+14	    assert Permission.BILLING_MANAGE in manager_perms
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: apps/backend/tests/test_compliance.py:14:4
+13	    assert Permission.DOCUMENT_VIEW in manager_perms
+14	    assert Permission.BILLING_MANAGE in manager_perms
+15	    
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: apps/backend/tests/test_compliance.py:18:4
+17	    user_perms = get_role_permissions("user")
+18	    assert Permission.DOCUMENT_VIEW in user_perms
+19	    assert Permission.DOCUMENT_UPLOAD in user_perms
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: apps/backend/tests/test_compliance.py:19:4
+18	    assert Permission.DOCUMENT_VIEW in user_perms
+19	    assert Permission.DOCUMENT_UPLOAD in user_perms
+20	    assert Permission.COMPLIANCE_EXPORT not in user_perms
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: apps/backend/tests/test_compliance.py:20:4
+19	    assert Permission.DOCUMENT_UPLOAD in user_perms
+20	    assert Permission.COMPLIANCE_EXPORT not in user_perms
+21	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: apps/backend/tests/test_compliance.py:25:4
+24	    dist = haversine_distance(51.507, -0.127, 40.712, -74.006)
+25	    assert 5500 < dist < 5700
+26	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: apps/backend/tests/test_compliance.py:40:4
+39	    )
+40	    assert is_anomaly is True
+41	    assert speed > 800.0  # Speed must exceed airline travel (800 km/h)
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: apps/backend/tests/test_compliance.py:41:4
+40	    assert is_anomaly is True
+41	    assert speed > 800.0  # Speed must exceed airline travel (800 km/h)
+42	    
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: apps/backend/tests/test_compliance.py:50:4
+49	    )
+50	    assert is_anomaly2 is False
+51	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: apps/backend/tests/test_compliance.py:56:4
+55	    chunks = splitter.split_text(text)
+56	    assert len(chunks) > 1
+57	    for chunk in chunks:
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: apps/backend/tests/test_compliance.py:58:8
+57	    for chunk in chunks:
+58	        assert len(chunk) <= 100
+
+--------------------------------------------------
+
+Code scanned:
+	Total lines of code: 3304
+	Total lines skipped (#nosec): 0
+	Total potential issues skipped due to specifically being disabled (e.g., #nosec BXXX): 0
+
+Run metrics:
+	Total issues (by severity):
+		Undefined: 0
+		Low: 31
+		Medium: 0
+		High: 0
+	Total issues (by confidence):
+		Undefined: 0
+		Low: 0
+		Medium: 6
+		High: 25
+Files skipped (0):
