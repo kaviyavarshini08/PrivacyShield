@@ -1,21 +1,23 @@
-import pytesseract
+try:
+    # pyrefly: ignore [missing-import]
+    import pytesseract
+    # pyrefly: ignore [missing-import]
+    import cv2
+    import numpy as np
+except ImportError:
+    pytesseract = None
+    cv2 = None
+    np = None
+
 from PIL import Image
 import os
 import logging
 
 logger = logging.getLogger(__name__)
 
-# Try setting local tesseract path for windows environments if needed
-# We prioritize default system path which is set up automatically in the Docker containers
-# If running locally on Windows outside docker, the user can override TESSERACT_CMD env var
 tesseract_cmd = os.getenv("TESSERACT_CMD")
-if tesseract_cmd:
+if tesseract_cmd and pytesseract:
     pytesseract.pytesseract.tesseract_cmd = tesseract_cmd
-
-import cv2
-from PIL import Image
-
-import numpy as np
 
 def perform_ocr(image_path: str):
     """

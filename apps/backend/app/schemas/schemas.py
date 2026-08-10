@@ -49,10 +49,7 @@ class MfaVerifyRequest(BaseModel):
     email: str
     code: str
 
-# OAuth Schemas
-class OAuthLoginRequest(BaseModel):
-    provider: str # 'google' or 'github'
-    token: str
+
 
 # Document Schemas
 class DocumentBase(BaseModel):

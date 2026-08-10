@@ -11,7 +11,7 @@ from ..database import get_db
 from ..models.models import User, AuditLog
 from ..schemas.schemas import (
     UserCreate, UserResponse, Token, MfaEnrollResponse, 
-    MfaVerifyRequest, OAuthLoginRequest, RefreshTokenRequest
+    MfaVerifyRequest, RefreshTokenRequest
 )
 from ..core.security import (
     get_password_hash, verify_password, create_access_token, 
@@ -24,28 +24,75 @@ router = APIRouter()
 
 import socket
 
-DISPOSABLE_DUMMY_DOMAINS = {
+DISPOSABLE_AND_GENERIC_DOMAINS = {
     "dummy.com", "tempmail.com", "10minutemail.com", "trashmail.com", "dispostable.com",
     "getnada.com", "guerrillamail.com", "sharklasers.com", "example.com", "test.com",
-    "fake.com", "dummy.io", "mailinator.com", "yopmail.com", "throwawaymail.com"
+    "fake.com", "dummy.io", "mailinator.com", "yopmail.com", "throwawaymail.com",
+    "company.com", "domain.com", "website.com", "site.com", "sample.com", "mycompany.com",
+    "yourcompany.com", "email.com", "mail.com", "service.com", "corp.com", "test.io",
+    "singh.com", "kumar.com", "smith.com", "john.com", "david.com", "user.com", "random.com",
+    "abc.com", "xyz.com", "temp.com", "123.com"
 }
 
-def verify_email_domain_exists(email: str) -> bool:
-    if not email or "@" not in email:
-        return False
-    domain = email.strip().split("@")[-1].lower()
-    return len(domain.split(".")) >= 2 and len(domain) >= 3
+COMMON_DOMAIN_TYPOS = {
+    # Yahoo typos
+    "yahho.com", "yaho.com", "yahooo.com", "yaho.co", "yaho.in", "yahoof.com", "yahoomail.co",
+    # Gmail typos
+    "gamil.com", "gmal.com", "gmaill.com", "gmeil.com", "gmai.com", "gmail.con", "gmail.cm", "gamil.co", "gmai.in",
+    # Hotmail / Outlook typos
+    "hotmial.com", "hotmai.com", "outlok.com", "outloo.com", "outlook.con", "hotmial.co",
+    # iCloud typos
+    "icld.com", "icloud.con", "icould.com"
+}
 
-def is_valid_real_email(email: str) -> bool:
+GENERIC_EMAIL_PREFIXES = {
+    "user", "test", "admin", "demo", "sample", "info", "mail", "name", "yourname", "username"
+}
+
+ALLOWED_EMAIL_DOMAINS = {
+    'gmail.com', 'googlemail.com', 'yahoo.com', 'yahoo.in', 'yahoo.co.in', 'yahoo.co.uk',
+    'outlook.com', 'outlook.in', 'hotmail.com', 'hotmail.co.uk', 'live.com', 'msn.com',
+    'icloud.com', 'me.com', 'mac.com', 'protonmail.com', 'proton.me', 'zoho.com', 'zoho.in',
+    'aol.com', 'gmx.com', 'gmx.net', 'rediffmail.com', 'yandex.com', 'mail.ru', 'fastmail.com',
+    'office365.com'
+}
+
+def validate_email_address(email: str) -> None:
+    if not email:
+        raise HTTPException(status_code=400, detail="Email address is required.")
+        
     email_clean = email.strip().lower()
-    if "@" not in email_clean:
-        return False
-    domain = email_clean.split("@")[-1]
-    if domain in DISPOSABLE_DUMMY_DOMAINS or "dummy" in domain or "tempmail" in domain or "fake" in domain:
-        return False
     import re
     email_regex = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
-    return bool(re.match(email_regex, email_clean))
+    if not re.match(email_regex, email_clean):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid email format. Please enter a valid email address (e.g. xxxxxxx@gmail.com)."
+        )
+        
+    parts = email_clean.split("@")
+    if len(parts) != 2:
+        raise HTTPException(status_code=400, detail="Invalid email format.")
+        
+    prefix, domain = parts[0], parts[1]
+    
+    # Check typo domains
+    if domain in COMMON_DOMAIN_TYPOS:
+        suggestion = "yahoo.com" if "yah" in domain else "gmail.com" if "gm" in domain else "outlook.com" if ("out" in domain or "hot" in domain) else "icloud.com"
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid email domain '{domain}'. Did you mean {suggestion}? Typo email domains are not allowed."
+        )
+
+    # Enforce recognized legitimate email providers or edu/gov domains
+    is_valid_provider = domain in ALLOWED_EMAIL_DOMAINS
+    is_edu_or_gov = domain.endswith('.edu') or domain.endswith('.gov') or domain.endswith('.ac.in') or domain.endswith('.edu.in')
+    
+    if not is_valid_provider and not is_edu_or_gov:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid email domain '{domain}'. Please use a recognized valid email address (e.g. xxxxxxx@gmail.com, yahoo.com, outlook.com)."
+        )
 
 def validate_password_complexity(password: str) -> None:
     if not password or len(password.strip()) < 6:
@@ -53,31 +100,15 @@ def validate_password_complexity(password: str) -> None:
             status_code=400,
             detail="Password must be at least 6 characters long."
         )
-    p = password.strip()
-    has_digit = any(c.isdigit() for c in p)
-    has_special = any(not c.isalnum() for c in p)
-    has_upper = any(c.isupper() for c in p)
-    has_lower = any(c.islower() for c in p)
-    
-    if not (has_digit and has_special and has_upper and has_lower):
-        raise HTTPException(
-            status_code=400,
-            detail="Password must be at least 6 characters long and contain at least 1 uppercase letter, 1 lowercase letter, 1 digit, and 1 special symbol (!@#$%^&*)."
-        )
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def register(user_in: UserCreate, db: AsyncSession = Depends(get_db)):
     email_clean = user_in.email.strip().lower()
     
-    if not is_valid_real_email(email_clean) or not verify_email_domain_exists(email_clean):
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid email address. Dummy or disposable emails (e.g. user@dummy.com) are not allowed."
-        )
-
+    validate_email_address(email_clean)
     validate_password_complexity(user_in.password)
 
-    result = await db.execute(select(User).filter(func.lower(User.email) == email_clean))
+    result = await db.execute(select(User).filter(func.trim(func.lower(User.email)) == email_clean))
     existing_user = result.scalars().first()
     
     if existing_user:
@@ -120,9 +151,11 @@ async def login(
     db: AsyncSession = Depends(get_db)
 ):
     email_clean = form_data.username.strip().lower()
-    pwd_clean = form_data.password.strip() if form_data.password else ""
+    pwd_clean = form_data.password if form_data.password else ""
 
-    result = await db.execute(select(User).filter(func.lower(User.email) == email_clean))
+    validate_email_address(email_clean)
+
+    result = await db.execute(select(User).filter(func.trim(func.lower(User.email)) == email_clean))
     user = result.scalars().first()
     
     if not user:
@@ -172,7 +205,7 @@ async def refresh_tokens(req: RefreshTokenRequest, db: AsyncSession = Depends(ge
         )
         
     email = payload.get("sub")
-    result = await db.execute(select(User).filter(User.email == email))
+    result = await db.execute(select(User).filter(func.trim(func.lower(User.email)) == (email or "").strip().lower()))
     user = result.scalars().first()
     if not user or not user.is_active:
         raise HTTPException(status_code=401, detail="User not found or inactive")
@@ -202,7 +235,7 @@ class ConfirmResetPasswordRequest(BaseModel):
 @router.post("/request-reset-link")
 async def request_reset_link(req: RequestResetLinkRequest, db: AsyncSession = Depends(get_db)):
     email_clean = req.email.strip().lower()
-    result = await db.execute(select(User).filter(func.lower(User.email) == email_clean))
+    result = await db.execute(select(User).filter(func.trim(func.lower(User.email)) == email_clean))
     user = result.scalars().first()
     
     if not user:
@@ -261,7 +294,7 @@ async def confirm_reset_password(req: ConfirmResetPasswordRequest, db: AsyncSess
     except Exception as e:
         raise HTTPException(status_code=400, detail="Invalid or expired password reset link.")
 
-    result = await db.execute(select(User).filter(func.lower(User.email) == email.lower()))
+    result = await db.execute(select(User).filter(func.trim(func.lower(User.email)) == email.strip().lower()))
     user = result.scalars().first()
     
     if not user:
@@ -291,7 +324,7 @@ async def forgot_password(req: ForgotPasswordRequest, db: AsyncSession = Depends
     email_clean = req.email.strip().lower()
     new_pass = req.new_password.strip() if req.new_password else "defaultPass123"
     
-    result = await db.execute(select(User).filter(func.lower(User.email) == email_clean))
+    result = await db.execute(select(User).filter(func.trim(func.lower(User.email)) == email_clean))
     user = result.scalars().first()
     
     if not user:
@@ -371,11 +404,30 @@ async def change_password(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Changes password for authenticated user and commits directly to PostgreSQL.
+    Changes password for authenticated user.
+    Step 1: Verify current_password matches the hashed_password in DB.
+    Step 2: Validate new_password complexity.
+    Step 3: Hash and commit new password to DB.
     """
+    # Step 1: Verify current password against the hashed password in DB
+    if not current_user.hashed_password or not verify_password(req.current_password, current_user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Current password is incorrect. Please try again."
+        )
+
+    # Step 2: Validate new password length
     if not req.new_password or len(req.new_password.strip()) < 6:
         raise HTTPException(status_code=400, detail="New password must be at least 6 characters long.")
 
+    # Step 3: Prevent reusing the same password
+    if verify_password(req.new_password.strip(), current_user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="New password must be different from your current password."
+        )
+
+    # Step 4: Hash and save the new password
     new_pass = req.new_password.strip()
     current_user.hashed_password = get_password_hash(new_pass)
     db.add(current_user)
@@ -395,13 +447,14 @@ async def change_password(
         "message": f"Password for {current_user.email} updated in database successfully!"
     }
 
+
 class FetchQuestionsRequest(BaseModel):
     email: str
 
 @router.post("/get-security-questions")
 async def get_security_questions(req: FetchQuestionsRequest, db: AsyncSession = Depends(get_db)):
     email_clean = req.email.strip().lower()
-    result = await db.execute(select(User).filter(func.lower(User.email) == email_clean))
+    result = await db.execute(select(User).filter(func.trim(func.lower(User.email)) == email_clean))
     user = result.scalars().first()
     
     if not user:
@@ -434,7 +487,7 @@ async def reset_password_with_questions(req: VerifyQuestionsResetPasswordRequest
     email_clean = req.email.strip().lower()
     validate_password_complexity(req.new_password)
         
-    result = await db.execute(select(User).filter(func.lower(User.email) == email_clean))
+    result = await db.execute(select(User).filter(func.trim(func.lower(User.email)) == email_clean))
     user = result.scalars().first()
     
     if not user:

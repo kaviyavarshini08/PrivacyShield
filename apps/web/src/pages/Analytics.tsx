@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { FileText, ShieldAlert, CheckCircle, Clock, ChevronDown, LayoutGrid } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import {
@@ -59,12 +59,12 @@ export function Analytics() {
     return () => clearInterval(interval);
   }, [fetchDashboard]);
 
-  // â”€â”€ Document list from per_document_data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Document list from per_document_data ─────────────────────────────────────
   const perDocData: any[] = data?.per_document_data || [];
   const isAll = selectedDocId === 'all';
   const selectedDoc = perDocData.find((d: any) => String(d.id) === selectedDocId);
 
-  // â”€â”€ Active entity counts based on selection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Active entity counts based on selection ───────────────────────────────────
   const activeEntityCounts: Record<string, number> = isAll
     ? (data?.entity_counts || {})
     : (selectedDoc?.entity_counts || {});
@@ -88,10 +88,10 @@ export function Analytics() {
     .sort((a, b) => b.count - a.count);
 
   const pieData = barChartData.map((d, i) => ({ ...d, fill: COLORS[i % COLORS.length] }));
-  const topEnt = barChartData.length > 0 ? barChartData[0].name : (data ? 'None detected yet' : 'â€”');
+  const topEnt = barChartData.length > 0 ? barChartData[0].name : (data ? 'None detected yet' : '—');
 
   const statCards = [
-    { label: isAll ? 'Total Documents' : 'Selected Doc', value: isAll ? activeTotalDocs : (selectedDoc?.name || 'â€”'), icon: FileText, color: 'text-cyan-500', bg: 'bg-cyan-500/10' },
+    { label: isAll ? 'Total Documents' : 'Selected Doc', value: isAll ? activeTotalDocs : (selectedDoc?.name || '—'), icon: FileText, color: 'text-cyan-500', bg: 'bg-cyan-500/10' },
     { label: 'PII Items Found', value: activeTotalEntities, icon: ShieldAlert, color: 'text-red-500', bg: 'bg-red-500/10' },
     { label: isAll ? 'Docs Redacted' : 'Redacted', value: activeRedacted, icon: CheckCircle, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
     { label: 'Storage Used', value: `${activeStorage} MB`, icon: Clock, color: 'text-amber-500', bg: 'bg-amber-500/10' },
@@ -120,10 +120,10 @@ export function Analytics() {
               onChange={e => setSelectedDocId(e.target.value)}
               className="w-full appearance-none pl-9 pr-8 py-2.5 text-sm rounded-xl border border-border bg-card text-foreground shadow-sm hover:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all cursor-pointer"
             >
-              <option value="all">ðŸ“Š All Documents</option>
+              <option value="all"> All Documents</option>
               {perDocData.map((doc: any) => (
                 <option key={doc.id} value={String(doc.id)}>
-                  ðŸ“„ {doc.full_name || doc.name}
+                   {doc.full_name || doc.name}
                 </option>
               ))}
             </select>
@@ -139,13 +139,13 @@ export function Analytics() {
         <div className="flex flex-wrap items-center gap-3 px-4 py-3 rounded-xl bg-primary/5 border border-primary/20 text-sm">
           <FileText className="w-4 h-4 text-primary flex-shrink-0" />
           <span className="font-semibold text-foreground">{selectedDoc.full_name || selectedDoc.name}</span>
-          <span className="text-muted-foreground hidden sm:inline">Â·</span>
+          <span className="text-muted-foreground hidden sm:inline">·</span>
           <span className="text-muted-foreground">{selectedDoc.date}</span>
-          <span className="text-muted-foreground hidden sm:inline">Â·</span>
+          <span className="text-muted-foreground hidden sm:inline">·</span>
           <span className={`font-semibold ${selectedDoc.status === 'Redacted' ? 'text-emerald-600' : 'text-amber-600'}`}>
             {selectedDoc.status}
           </span>
-          <span className="text-muted-foreground hidden sm:inline">Â·</span>
+          <span className="text-muted-foreground hidden sm:inline">·</span>
           <span className="text-muted-foreground">{selectedDoc.size_kb} KB</span>
         </div>
       )}
@@ -176,7 +176,7 @@ export function Analytics() {
             <CardTitle className="text-base font-semibold flex items-center gap-2">
               <LayoutGrid className="w-4 h-4 text-primary" />
               Document Overview
-              <span className="text-xs font-normal text-muted-foreground ml-1">â€” click a row to drill into that document</span>
+              <span className="text-xs font-normal text-muted-foreground ml-1">— click a row to drill into that document</span>
             </CardTitle>
           </CardHeader>
           <div className="overflow-x-auto">
@@ -203,7 +203,7 @@ export function Analytics() {
                       onClick={() => setSelectedDocId(String(doc.id))}
                     >
                       <td className="px-4 py-3 font-medium text-foreground max-w-[200px] truncate" title={doc.full_name}>
-                        ðŸ“„ {doc.full_name || doc.name}
+                         {doc.full_name || doc.name}
                       </td>
                       <td className="px-4 py-3 text-center text-muted-foreground">{doc.date}</td>
                       <td className="px-4 py-3 text-center">
@@ -224,7 +224,7 @@ export function Analytics() {
                           {topEntries.map(([type, cnt]) => (
                             <span key={type} className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-muted rounded text-xs text-muted-foreground">
                               {type.replace('IN_', '').replace(/_/g, ' ')}
-                              <span className="font-bold text-foreground">Ã—{cnt as number}</span>
+                              <span className="font-bold text-foreground">×{cnt as number}</span>
                             </span>
                           ))}
                         </div>
@@ -246,7 +246,7 @@ export function Analytics() {
             <CardTitle>
               PII Entity Types Detected
               {!isAll && selectedDoc && (
-                <span className="ml-2 text-xs font-normal text-muted-foreground">â€” {selectedDoc.name}</span>
+                <span className="ml-2 text-xs font-normal text-muted-foreground">— {selectedDoc.name}</span>
               )}
             </CardTitle>
           </CardHeader>
@@ -329,7 +329,7 @@ export function Analytics() {
                     </ResponsiveContainer>
                   </div>
 
-                  {/* Color legend â€” entity name + color swatch + count */}
+                  {/* Color legend — entity name + color swatch + count */}
                   <div className="mt-3 space-y-2 max-h-[160px] overflow-y-auto pr-1">
                     {pieData.map((entry: any, i: number) => (
                       <div key={i} className="flex items-center justify-between text-xs">

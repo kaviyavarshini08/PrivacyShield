@@ -4,6 +4,9 @@ const path = require('path');
 const projectRoot = __dirname;
 const workspaceRoot = path.resolve(projectRoot, '../..');
 
+// Fix for hoisted expo-router in monorepo not resolving app root correctly
+process.env.EXPO_ROUTER_APP_ROOT = '../../apps/mobile/app';
+
 const config = getDefaultConfig(projectRoot);
 
 // 1. Watch all files in the monorepo

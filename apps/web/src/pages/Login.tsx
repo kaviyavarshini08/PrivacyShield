@@ -36,6 +36,7 @@ export function Login() {
   const [signUpA1, setSignUpA1] = useState('');
   const [signUpA2, setSignUpA2] = useState('');
   const [signUpA3, setSignUpA3] = useState('');
+  const [signUpEmailError, setSignUpEmailError] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -45,6 +46,13 @@ export function Login() {
       toast.error("Please enter your email address.");
       return;
     }
+
+    const emailVal = validateEmailDetails(cleanEmail);
+    if (!emailVal.valid) {
+      toast.error(emailVal.error || "Invalid email address.");
+      return;
+    }
+
     setIsLoading(true);
     
     try {
@@ -53,15 +61,9 @@ export function Login() {
       navigate('/dashboard');
     } catch (e: any) {
       setIsLoading(false);
-      const status = e.response?.status;
       const detail = e.response?.data?.detail;
       const msg = detail || "Authentication failed. Is the backend running?";
       toast.error(msg);
-
-      if (status === 404 || (typeof detail === 'string' && detail.toLowerCase().includes('account does not exist'))) {
-        setSignUpEmail(cleanEmail);
-        setShowSignUpModal(true);
-      }
     }
   };
 
@@ -89,24 +91,53 @@ export function Login() {
     }
   };
 
-  const isValidEmail = (emailStr: string) => {
+  const validateEmailDetails = (emailStr: string): { valid: boolean; error?: string } => {
     const cleanEmail = emailStr.trim().toLowerCase();
-    const domain = cleanEmail.split('@').pop() || '';
-    const disposableDomains = ['dummy.com', 'tempmail.com', '10minutemail.com', 'trashmail.com', 'example.com', 'test.com', 'fake.com', 'dummy.io', 'mailinator.com', 'yopmail.com'];
-    if (disposableDomains.includes(domain) || domain.includes('dummy') || domain.includes('tempmail') || domain.includes('fake')) {
-      return false;
-    }
+    if (!cleanEmail) return { valid: false, error: "Please enter an email address." };
+
+    const parts = cleanEmail.split('@');
+    if (parts.length !== 2) return { valid: false, error: "Invalid email format. Please enter a valid email address." };
+    const [prefix, domain] = parts;
+
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    return emailRegex.test(cleanEmail);
+    if (!emailRegex.test(cleanEmail)) {
+      return { valid: false, error: "Invalid email format. Please enter a valid email address (e.g. name@gmail.com)." };
+    }
+
+    const typoDomains: Record<string, string> = {
+      'yahho.com': 'yahoo.com', 'yaho.com': 'yahoo.com', 'yahooo.com': 'yahoo.com', 'yaho.co': 'yahoo.com', 'yaho.in': 'yahoo.com', 'yahoof.com': 'yahoo.com',
+      'gamil.com': 'gmail.com', 'gmal.com': 'gmail.com', 'gmaill.com': 'gmail.com', 'gmeil.com': 'gmail.com', 'gmai.com': 'gmail.com', 'gmail.con': 'gmail.com', 'gmail.cm': 'gmail.com',
+      'hotmial.com': 'hotmail.com', 'hotmai.com': 'hotmail.com', 'outlok.com': 'outlook.com', 'outloo.com': 'outlook.com', 'outlook.con': 'outlook.com', 'icld.com': 'icloud.com'
+    };
+
+    if (typoDomains[domain]) {
+      return { valid: false, error: `Invalid email domain '${domain}'. Did you mean ${typoDomains[domain]}? Typo email domains are not allowed.` };
+    }
+
+    const allowedProviders = [
+      'gmail.com', 'googlemail.com', 'yahoo.com', 'yahoo.in', 'yahoo.co.in', 'yahoo.co.uk',
+      'outlook.com', 'outlook.in', 'hotmail.com', 'hotmail.co.uk', 'live.com', 'msn.com',
+      'icloud.com', 'me.com', 'mac.com', 'protonmail.com', 'proton.me', 'zoho.com', 'zoho.in',
+      'aol.com', 'gmx.com', 'gmx.net', 'rediffmail.com', 'yandex.com', 'mail.ru', 'fastmail.com',
+      'office365.com'
+    ];
+
+    const isValidProvider = allowedProviders.includes(domain);
+    const isEduOrGov = domain.endsWith('.edu') || domain.endsWith('.gov') || domain.endsWith('.ac.in') || domain.endsWith('.edu.in');
+
+    if (!isValidProvider && !isEduOrGov) {
+      return { valid: false, error: `Invalid email domain '${domain}'. Please use a valid email address (e.g. xxxxxxx@gmail.com, yahoo.com, outlook.com).` };
+    }
+
+    return { valid: true };
   };
 
   const isStrongPassword = (pass: string) => {
-    if (pass.length < 6) return false;
-    const hasDigit = /\d/.test(pass);
-    const hasUpper = /[A-Z]/.test(pass);
-    const hasLower = /[a-z]/.test(pass);
-    const hasSpecial = /[^a-zA-Z0-9]/.test(pass);
-    return hasDigit && hasUpper && hasLower && hasSpecial;
+    const minLength = pass.trim().length >= 6;
+    const hasSpecial = /[^A-Za-z0-9]/.test(pass);
+    const hasCapital = /[A-Z]/.test(pass);
+    const hasDigit = /[0-9]/.test(pass);
+    return minLength && hasSpecial && hasCapital && hasDigit;
   };
 
   const handleVerifyQuestionsAndReset = async (e: React.FormEvent) => {
@@ -167,8 +198,10 @@ export function Login() {
     }
 
     const cleanEmail = signUpEmail.trim().toLowerCase();
-    if (!isValidEmail(cleanEmail)) {
-      toast.error("Invalid email address. Dummy or disposable emails (e.g. user@dummy.com) are not allowed.");
+    const emailValidation = validateEmailDetails(cleanEmail);
+    if (!emailValidation.valid) {
+      setSignUpEmailError(emailValidation.error || "Invalid email address.");
+      toast.error(emailValidation.error || "Invalid email address.");
       return;
     }
     if (!isStrongPassword(signUpPassword)) {
@@ -204,6 +237,10 @@ export function Login() {
         errDetail = err.message;
       }
       toast.error(errDetail);
+      if (typeof detail === 'string' && detail.toLowerCase().includes('already exists')) {
+        setEmail(cleanEmail);
+        setShowSignUpModal(false);
+      }
     } finally {
       setIsRegistering(false);
     }
@@ -220,7 +257,7 @@ export function Login() {
           </div>
         </div>
 
-        <div className="z-10 space-y-6 max-w-lg">
+        <div className="z-10 space-y-6 max-w-lg my-auto py-8">
           <h1 className="text-4xl font-extrabold tracking-tight leading-tight">
             Automated PII Redaction & Enterprise Data Security
           </h1>
@@ -277,7 +314,7 @@ export function Login() {
               <label className="text-sm font-medium">Email Address</label>
               <Input 
                 type="email" 
-                placeholder="user@company.com" 
+                placeholder="xxxxxxx@gmail.com" 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -363,11 +400,11 @@ export function Login() {
                   </label>
                   <Input 
                     type="email" 
-                    placeholder="yourname@gmail.com" 
+                    placeholder="xxxxxxx@gmail.com" 
                     value={resetEmail}
                     onChange={(e) => setResetEmail(e.target.value)}
                     required
-                    className="h-10 text-sm bg-slate-950 text-white placeholder:text-slate-500 border border-slate-700 focus:border-cyan-500 font-medium px-3"
+                    className="h-10 text-sm bg-background border border-input text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary font-medium px-3"
                   />
                 </div>
 
@@ -391,40 +428,40 @@ export function Login() {
               </form>
             ) : (
               <form onSubmit={handleVerifyQuestionsAndReset} className="space-y-4">
-                <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 space-y-3">
+                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3">
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-teal-400">Question 1: {forgotQ1}</label>
+                    <label className="text-xs font-semibold text-primary">Question 1: {forgotQ1}</label>
                     <Input 
                       type="text" 
                       placeholder="Your Answer 1..." 
                       value={forgotA1}
                       onChange={(e) => setForgotA1(e.target.value)}
                       required
-                      className="h-10 text-sm bg-slate-950 text-white placeholder:text-slate-500 border border-slate-700 focus:border-cyan-500 font-medium px-3"
+                      className="h-10 text-sm bg-background border border-input text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary font-medium px-3"
                     />
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-teal-400">Question 2: {forgotQ2}</label>
+                    <label className="text-xs font-semibold text-primary">Question 2: {forgotQ2}</label>
                     <Input 
                       type="text" 
                       placeholder="Your Answer 2..." 
                       value={forgotA2}
                       onChange={(e) => setForgotA2(e.target.value)}
                       required
-                      className="h-10 text-sm bg-slate-950 text-white placeholder:text-slate-500 border border-slate-700 focus:border-cyan-500 font-medium px-3"
+                      className="h-10 text-sm bg-background border border-input text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary font-medium px-3"
                     />
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-teal-400">Question 3: {forgotQ3}</label>
+                    <label className="text-xs font-semibold text-primary">Question 3: {forgotQ3}</label>
                     <Input 
                       type="text" 
                       placeholder="Your Answer 3..." 
                       value={forgotA3}
                       onChange={(e) => setForgotA3(e.target.value)}
                       required
-                      className="h-10 text-sm bg-slate-950 text-white placeholder:text-slate-500 border border-slate-700 focus:border-cyan-500 font-medium px-3"
+                      className="h-10 text-sm bg-background border border-input text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary font-medium px-3"
                     />
                   </div>
                 </div>
@@ -438,7 +475,7 @@ export function Login() {
                       value={forgotNewPass}
                       onChange={(e) => setForgotNewPass(e.target.value)}
                       required
-                      className="h-10 text-sm bg-slate-950 text-white placeholder:text-slate-500 border border-slate-700 focus:border-cyan-500 font-medium px-3"
+                      className="h-10 text-sm bg-background border border-input text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary font-medium px-3"
                     />
                   </div>
                   <div className="space-y-1">
@@ -449,7 +486,7 @@ export function Login() {
                       value={forgotConfirmPass}
                       onChange={(e) => setForgotConfirmPass(e.target.value)}
                       required
-                      className="h-10 text-sm bg-slate-950 text-white placeholder:text-slate-500 border border-slate-700 focus:border-cyan-500 font-medium px-3"
+                      className="h-10 text-sm bg-background border border-input text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary font-medium px-3"
                     />
                   </div>
                 </div>
@@ -510,7 +547,7 @@ export function Login() {
                   value={signUpName}
                   onChange={(e) => setSignUpName(e.target.value)}
                   required
-                  className="h-10 text-sm bg-slate-950 text-white placeholder:text-slate-500 border border-slate-700 focus:border-cyan-500 font-medium px-3"
+                  className="h-10 text-sm bg-background border border-input text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary font-medium px-3"
                 />
               </div>
 
@@ -521,12 +558,26 @@ export function Login() {
                 </label>
                 <Input 
                   type="email" 
-                  placeholder="yourname@gmail.com" 
+                  placeholder="xxxxxxx@gmail.com" 
                   value={signUpEmail}
-                  onChange={(e) => setSignUpEmail(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setSignUpEmail(val);
+                    if (val.trim()) {
+                      const res = validateEmailDetails(val);
+                      setSignUpEmailError(res.valid ? '' : (res.error || 'Invalid email address'));
+                    } else {
+                      setSignUpEmailError('');
+                    }
+                  }}
                   required
-                  className="h-10 text-sm bg-slate-950 text-white placeholder:text-slate-500 border border-slate-700 focus:border-cyan-500 font-medium px-3"
+                  className={`h-10 text-sm bg-background border ${signUpEmailError ? 'border-red-500 ring-1 ring-red-500' : 'border-input'} text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary font-medium px-3`}
                 />
+                {signUpEmailError && (
+                  <p className="text-xs font-semibold text-red-500 mt-1 flex items-center space-x-1">
+                    <span>⚠️ {signUpEmailError}</span>
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -540,52 +591,50 @@ export function Login() {
                   value={signUpPassword}
                   onChange={(e) => setSignUpPassword(e.target.value)}
                   required
-                  className="h-10 text-sm bg-slate-950 text-white placeholder:text-slate-500 border border-slate-700 focus:border-cyan-500 font-medium px-3"
+                  className="h-10 text-sm bg-background border border-input text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary font-medium px-3"
                 />
               </div>
 
-
-
               {/* 3 Security Questions Setup */}
-              <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 space-y-3 pt-3">
-                <p className="text-xs font-bold text-cyan-400 flex items-center space-x-1.5">
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 pt-3">
+                <p className="text-xs font-bold text-primary flex items-center space-x-1.5">
                   <Shield className="w-3.5 h-3.5" />
                   <span>Account Recovery Security Questions</span>
                 </p>
 
                 <div className="space-y-1">
-                  <label className="text-[11px] font-medium text-slate-300">Q1: What is your pet's name?</label>
+                  <label className="text-[11px] font-medium text-slate-700 dark:text-slate-300">Q1: What is your pet's name?</label>
                   <Input 
                     type="text" 
                     placeholder="Answer 1 (e.g. Fluffy)" 
                     value={signUpA1}
                     onChange={(e) => setSignUpA1(e.target.value)}
                     required
-                    className="h-10 text-sm bg-slate-950 text-white placeholder:text-slate-500 border border-slate-700 focus:border-cyan-500 font-medium px-3"
+                    className="h-10 text-sm bg-background border border-input text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary font-medium px-3"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[11px] font-medium text-slate-300">Q2: What is your mother's maiden name?</label>
+                  <label className="text-[11px] font-medium text-slate-700 dark:text-slate-300">Q2: What is your mother's maiden name?</label>
                   <Input 
                     type="text" 
                     placeholder="Answer 2 (e.g. Smith)" 
                     value={signUpA2}
                     onChange={(e) => setSignUpA2(e.target.value)}
                     required
-                    className="h-10 text-sm bg-slate-950 text-white placeholder:text-slate-500 border border-slate-700 focus:border-cyan-500 font-medium px-3"
+                    className="h-10 text-sm bg-background border border-input text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary font-medium px-3"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[11px] font-medium text-slate-300">Q3: What city were you born in?</label>
+                  <label className="text-[11px] font-medium text-slate-700 dark:text-slate-300">Q3: What city were you born in?</label>
                   <Input 
                     type="text" 
                     placeholder="Answer 3 (e.g. New York)" 
                     value={signUpA3}
                     onChange={(e) => setSignUpA3(e.target.value)}
                     required
-                    className="h-10 text-sm bg-slate-950 text-white placeholder:text-slate-500 border border-slate-700 focus:border-cyan-500 font-medium px-3"
+                    className="h-10 text-sm bg-background border border-input text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary font-medium px-3"
                   />
                 </div>
               </div>

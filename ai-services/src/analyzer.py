@@ -75,22 +75,25 @@ def analyze_text(text: str, language: str = "en") -> list:
     if not text.strip():
         return []
         
+    # PERSON and LOCATION are excluded — they cause too many false positives
+    # on resumes (skills mistaken for names/places). Only sensitive IDs are scanned.
     results = analyzer.analyze(
         text=text,
         language=language,
         entities=[
-            "PHONE_NUMBER", "EMAIL_ADDRESS", "IN_PAN", "IN_AADHAAR", 
-            "PERSON", "LOCATION", "CREDIT_CARD", "PASSPORT", "API_KEY"
+            "PHONE_NUMBER", "EMAIL_ADDRESS", "IN_PAN", "IN_AADHAAR",
+            "CREDIT_CARD", "PASSPORT", "API_KEY"
         ]
     )
     
     serialized = []
     for r in results:
+        entity_text = text[r.start:r.end]
         serialized.append({
             "entity_type": r.entity_type,
             "start_char": r.start,
             "end_char": r.end,
-            "text": text[r.start:r.end],
+            "text": entity_text,
             "confidence": r.score,
             # Bounding box defaults to empty, to be populated if text has block positions
             "bbox": [0, 0, 0, 0],

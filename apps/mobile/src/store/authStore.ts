@@ -72,14 +72,7 @@ interface AuthState {
   checkAuth: () => Promise<void>;
 }
 
-const MOCK_USER: User = {
-  id: 1,
-  email: 'operator@privacyshield.com',
-  fullName: 'Security Operator',
-  role: 'user',
-  isActive: true,
-  createdAt: new Date().toISOString(),
-};
+
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
@@ -111,19 +104,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ user, accessToken: access_token, loading: false });
       return { status: 'success' };
     } catch (err: any) {
-      if (err.response?.status === 404 || err.response?.data?.detail?.includes("Account does not exist")) {
-        const errMsg = err.response?.data?.detail || "Account does not exist. Please sign up to continue.";
-        set({ error: errMsg, loading: false });
-        return { status: 'error', message: errMsg };
-      }
-      console.warn('Backend login unavailable or failed, falling back to authenticated operator session:', err?.message);
-      // Fallback for seamless offline mobile testing in Expo Go
-      const mockToken = 'mock_jwt_token_privacy_shield_sec_ops';
-      const user = { ...MOCK_USER, email: email || MOCK_USER.email };
-      await setSecureItem('accessToken', mockToken);
-      await setSecureItem('user', JSON.stringify(user));
-      set({ user, accessToken: mockToken, loading: false });
-      return { status: 'success' };
+      const errMsg = err.response?.data?.detail || err.message || "Failed to log in. Ensure backend is running.";
+      set({ error: errMsg, loading: false });
+      return { status: 'error', message: errMsg };
     }
   },
 
@@ -141,12 +124,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ user, accessToken: access_token, mfaRequiredEmail: null, loading: false });
       return true;
     } catch (err: any) {
-      console.warn('Backend MFA verification unavailable, using fallback:', err?.message);
-      const mockToken = 'mock_jwt_token_privacy_shield_sec_ops';
-      await setSecureItem('accessToken', mockToken);
-      await setSecureItem('user', JSON.stringify(MOCK_USER));
-      set({ user: MOCK_USER, accessToken: mockToken, mfaRequiredEmail: null, loading: false });
-      return true;
+      set({ error: err.message || 'MFA Verification failed', loading: false });
+      return false;
     }
   },
 

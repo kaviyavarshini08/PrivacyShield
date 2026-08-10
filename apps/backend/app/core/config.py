@@ -27,17 +27,7 @@ class Settings(BaseSettings):
             elif db_url.startswith("postgresql://"):
                 return db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
             return db_url
-        try:
-            import socket
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.settimeout(0.5)
-            result = sock.connect_ex((self.POSTGRES_SERVER, 5432))
-            sock.close()
-            if result == 0:
-                return f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}/{self.POSTGRES_DB}"
-        except Exception:
-            pass
-        return "sqlite+aiosqlite:///./privacyshield.db"
+        return f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}/{self.POSTGRES_DB}"
     
     @property
     def SYNC_DATABASE_URI(self) -> str:
@@ -46,17 +36,7 @@ class Settings(BaseSettings):
             if db_url.startswith("postgres://"):
                 return db_url.replace("postgres://", "postgresql://", 1)
             return db_url
-        try:
-            import socket
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.settimeout(0.5)
-            result = sock.connect_ex((self.POSTGRES_SERVER, 5432))
-            sock.close()
-            if result == 0:
-                return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}/{self.POSTGRES_DB}"
-        except Exception:
-            pass
-        return "sqlite:///./privacyshield.db"
+        return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}/{self.POSTGRES_DB}"
 
     # Redis Connection
     REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
@@ -64,11 +44,7 @@ class Settings(BaseSettings):
     # Storage
     UPLOAD_DIR: str = os.getenv("UPLOAD_DIR", "./backend_storage")
     
-    # OAuth
-    GOOGLE_CLIENT_ID: Optional[str] = os.getenv("GOOGLE_CLIENT_ID")
-    GOOGLE_CLIENT_SECRET: Optional[str] = os.getenv("GOOGLE_CLIENT_SECRET")
-    GITHUB_CLIENT_ID: Optional[str] = os.getenv("GITHUB_CLIENT_ID")
-    GITHUB_CLIENT_SECRET: Optional[str] = os.getenv("GITHUB_CLIENT_SECRET")
+
     
     # RAG Chat
     OPENAI_API_KEY: Optional[str] = os.getenv("OPENAI_API_KEY")

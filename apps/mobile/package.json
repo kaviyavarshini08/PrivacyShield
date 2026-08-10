@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "main": "expo-router/entry",
   "scripts": {
-    "start": "expo start",
-    "android": "expo start --android",
+    "start": "expo start --offline --port 8088",
+    "android": "expo start --android --offline --port 8088",
     "ios": "expo start --ios",
     "web": "expo start --web",
     "ts:check": "tsc"

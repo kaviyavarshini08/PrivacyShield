@@ -16,8 +16,6 @@ def generate_explainability_metadata(entity_type: str, text: str, confidence: fl
         "API_KEY": "Detected high-entropy private key, auth token, or API secret parameter signature.",
         "PHONE_NUMBER": "Detected structured telephone number sequence in context.",
         "EMAIL_ADDRESS": "Detected standard internet email domain routing format.",
-        "PERSON": "Identified name of a person using NLP named entity recognition (NER) model.",
-        "LOCATION": "Identified geographical address or location reference.",
         "CREDIT_CARD": "Detected credit card payment primary account number signature."
     }
     

@@ -10,7 +10,7 @@ export function Header() {
   const userInitial = (user?.full_name || user?.email || 'U').charAt(0).toUpperCase();
 
   return (
-    <header className="h-16 border-b border-border bg-card text-card-foreground flex items-center justify-between px-6 z-20 sticky top-0 bg-slate-950/20 backdrop-blur-md">
+    <header className="h-16 border-b border-border bg-card text-card-foreground flex items-center justify-between px-6 z-20 sticky top-0 backdrop-blur-md">
       <div className="flex items-center space-x-3">
         <Button variant="ghost" size="icon" className="md:hidden mr-2">
           <Menu className="w-5 h-5" />

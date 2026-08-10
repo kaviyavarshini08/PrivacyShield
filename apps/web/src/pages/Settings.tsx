@@ -26,6 +26,16 @@ export function Settings() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isChangingPass, setIsChangingPass] = useState(false);
 
+  // Password rule checks (must match backend validate_password_complexity)
+  const pwdRules = [
+    { label: 'At least 6 characters',          met: newPassword.length >= 6 },
+    { label: 'One uppercase letter (A-Z)',      met: /[A-Z]/.test(newPassword) },
+    { label: 'One lowercase letter (a-z)',      met: /[a-z]/.test(newPassword) },
+    { label: 'One number (0-9)',                met: /[0-9]/.test(newPassword) },
+    { label: 'One special character (!@#$%^&*)', met: /[^a-zA-Z0-9]/.test(newPassword) },
+  ];
+  const allRulesMet = pwdRules.every(r => r.met);
+
   // Helper to format default name from email
   const deriveNameFromEmail = (emailStr: string) => {
     if (!emailStr) return 'User';
@@ -89,7 +99,11 @@ export function Settings() {
       return;
     }
     if (newPassword.length < 6) {
-      toast.error("New password must be at least 6 characters long.");
+      toast.error('Password must be at least 6 characters long.');
+      return;
+    }
+    if (!allRulesMet) {
+      toast.error('Password does not meet all the complexity requirements. Please check the rules below.');
       return;
     }
 
@@ -214,7 +228,7 @@ export function Settings() {
                       value={email} 
                       disabled
                       readOnly
-                      placeholder="yourname@gmail.com"
+                      placeholder="xxxxxxx@gmail.com"
                       className="h-10 bg-muted/40 cursor-not-allowed text-muted-foreground opacity-80"
                     />
                   </div>
@@ -303,8 +317,26 @@ export function Settings() {
                           value={newPassword}
                           onChange={(e) => setNewPassword(e.target.value)}
                           required
-                          className="h-10"
+                          className={`h-10 ${newPassword && !allRulesMet ? 'border-red-400 focus-visible:ring-red-400' : newPassword && allRulesMet ? 'border-emerald-500 focus-visible:ring-emerald-400' : ''}`}
                         />
+                        {/* Live password rules checklist */}
+                        {newPassword.length > 0 && (
+                          <div className="mt-3 p-3 rounded-lg border border-border bg-muted/30 space-y-1.5">
+                            <p className="text-xs font-semibold text-muted-foreground mb-2">Password Requirements:</p>
+                            {pwdRules.map((rule) => (
+                              <div key={rule.label} className="flex items-center gap-2">
+                                <span className={`w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold transition-colors ${
+                                  rule.met ? 'bg-emerald-500 text-white' : 'bg-muted border border-border text-muted-foreground'
+                                }`}>
+                                  {rule.met ? '✓' : '·'}
+                                </span>
+                                <span className={`text-xs transition-colors ${rule.met ? 'text-emerald-600 dark:text-emerald-400 font-medium' : 'text-muted-foreground'}`}>
+                                  {rule.label}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                       <div className="space-y-2">
                         <label className="text-sm font-medium">Confirm New Password</label>
@@ -314,12 +346,28 @@ export function Settings() {
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
                           required
-                          className="h-10"
+                          className={`h-10 ${
+                            confirmPassword && confirmPassword !== newPassword
+                              ? 'border-red-400 focus-visible:ring-red-400'
+                              : confirmPassword && confirmPassword === newPassword
+                              ? 'border-emerald-500 focus-visible:ring-emerald-400'
+                              : ''
+                          }`}
                         />
+                        {confirmPassword && confirmPassword !== newPassword && (
+                          <p className="text-xs text-red-500 mt-1">Passwords do not match.</p>
+                        )}
+                        {confirmPassword && confirmPassword === newPassword && (
+                          <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">✓ Passwords match.</p>
+                        )}
                       </div>
                     </div>
-                    <Button type="submit" disabled={isChangingPass} className="bg-[#1E3A8A] hover:bg-[#1E3A8A]/90 text-white font-medium">
-                      {isChangingPass ? "Updating Password..." : "Update Password"}
+                    <Button 
+                      type="submit" 
+                      disabled={isChangingPass || !allRulesMet || confirmPassword !== newPassword}
+                      className="bg-[#1E3A8A] hover:bg-[#1E3A8A]/90 text-white font-medium disabled:opacity-50"
+                    >
+                      {isChangingPass ? 'Updating Password...' : 'Update Password'}
                     </Button>
                   </form>
                 </CardContent>

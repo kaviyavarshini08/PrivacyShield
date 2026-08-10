@@ -6,8 +6,12 @@ import json
 import logging
 import fitz # PyMuPDF
 from docx import Document as DocxDocument
-import torch
-from sentence_transformers import SentenceTransformer
+try:
+    import torch
+    from sentence_transformers import SentenceTransformer
+except ImportError:
+    torch = None
+    SentenceTransformer = None
 
 from src.providers.manager import provider_manager
 from src.ocr import perform_ocr

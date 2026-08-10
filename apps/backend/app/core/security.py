@@ -76,43 +76,6 @@ def verify_mfa_code(secret: str, code: str) -> bool:
     # Allows a grace period of 30 seconds before/after
     return totp.verify(code, valid_window=1)
 
-# OAuth Integration Adapters
-async def verify_google_oauth(token: str) -> Dict[str, Any]:
-    """
-    100% Local verification of Google OAuth tokens (decodes local claims or simulated identity).
-    """
-    logger.info("Processing Google OAuth locally...")
-    if not token or not token.strip():
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid Google OAuth token"
-        )
-    # Extract mock or embedded email from local token payload
-    email_clean = token.strip() if "@" in token else f"user_{token[:6].lower()}@google.local"
-    name_clean = email_clean.split("@")[0].replace(".", " ").title()
-    return {
-        "email": email_clean,
-        "full_name": name_clean,
-        "id": f"google_{hash(token) & 0xffffffff}"
-    }
-
-async def verify_github_oauth(token: str) -> Dict[str, Any]:
-    """
-    100% Local verification of GitHub OAuth tokens (decodes local claims or simulated identity).
-    """
-    logger.info("Processing GitHub OAuth locally...")
-    if not token or not token.strip():
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid GitHub OAuth token"
-        )
-    email_clean = token.strip() if "@" in token else f"dev_{token[:6].lower()}@github.local"
-    name_clean = email_clean.split("@")[0].replace(".", " ").title()
-    return {
-        "email": email_clean,
-        "full_name": name_clean,
-        "id": f"github_{hash(token) & 0xffffffff}"
-    }
 
 
 # Dependency to extract and check current user

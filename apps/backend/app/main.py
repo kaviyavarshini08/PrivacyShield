@@ -8,7 +8,7 @@ import time
 import logging
 
 from .database import engine, Base, AsyncSessionLocal, redis_client
-from .routers import auth, upload, queue, analysis, compliance, chat, teams, billing, analytics
+from .routers import auth, upload, queue, analysis, compliance, chat, teams, analytics
 from .core.config import settings
 from .core.logging import setup_logging, correlation_id_ctx
 from .middleware.security import RequestTracingMiddleware, SecureHeadersMiddleware, RedisRateLimitMiddleware
@@ -121,7 +121,7 @@ app.include_router(analysis.router, prefix=f"{settings.API_V1_STR}/analysis", ta
 app.include_router(compliance.router, prefix=f"{settings.API_V1_STR}/compliance", tags=["Compliance Audits"])
 app.include_router(chat.router, prefix=f"{settings.API_V1_STR}/chat", tags=["AI Chat Assistant"])
 app.include_router(teams.router, prefix=f"{settings.API_V1_STR}/teams", tags=["Team Workspaces"])
-app.include_router(billing.router, prefix=f"{settings.API_V1_STR}/billing", tags=["Stripe Billing"])
+
 app.include_router(analytics.router, prefix=f"{settings.API_V1_STR}/analytics", tags=["Analytics Hub"])
 
 
