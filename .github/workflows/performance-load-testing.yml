@@ -50,7 +50,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: api-load-test-performance-report
-          path: test-reports/
+          path: test-reports/api_load_test_performance_report.zip
 
       - name: Commit and Push Report
         if: always()

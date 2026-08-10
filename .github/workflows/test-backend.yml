@@ -55,4 +55,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: backend-test-report
-          path: test-reports/
+          path: test-reports/backend_test_report.zip

@@ -50,7 +50,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: web-selenium-e2e-report
-          path: test-reports/
+          path: test-reports/web_selenium_e2e_report.zip
 
       - name: Commit and Push Report
         if: always()

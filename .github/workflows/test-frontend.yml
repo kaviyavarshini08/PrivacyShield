@@ -47,4 +47,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: frontend-test-report
-          path: test-reports/
+          path: test-reports/frontend_test_report.zip

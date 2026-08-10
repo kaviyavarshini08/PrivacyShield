@@ -74,7 +74,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: mobile-appium-e2e-reports
-          path: test-reports/
+          path: test-reports/mobile_appium_e2e_reports.zip
 
       - name: Commit and Push Reports
         if: always()
