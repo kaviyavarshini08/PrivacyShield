@@ -25,11 +25,11 @@ Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd ai-services; .
 # 3. Start the FastAPI API Gateway
 Write-Host "[3/5] Starting FastAPI Gateway (Port 8000)..." -ForegroundColor Green
 $env:PYTHONPATH="."
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd apps/backend; $env:PYTHONPATH='.'; ..\\..\\.venv\\Scripts\\uvicorn app.main:app --port 8000 --reload"
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd apps/backend; `$env:PYTHONPATH='.'; ..\\..\\.venv\\Scripts\\uvicorn app.main:app --port 8000 --reload"
 
 # 4. Start Celery Async Task Worker
 Write-Host "[4/5] Starting Celery Worker queue..." -ForegroundColor Green
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd apps/backend; $env:PYTHONPATH='.'; ..\\..\\.venv\\Scripts\\celery -A app.services.tasks.celery_app worker --loglevel=info -P solo"
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd apps/backend; `$env:PYTHONPATH='.'; ..\\..\\.venv\\Scripts\\celery -A app.services.tasks.celery_app worker --loglevel=info -P solo"
 
 # 5. Start Web Dashboard Front-End
 Write-Host "[5/5] Launching React Web Dashboard (Port 5173)..." -ForegroundColor Green

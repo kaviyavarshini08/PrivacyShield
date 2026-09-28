@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { 
-  FileText, Shield, Lock, AlertTriangle, Activity 
+  FileText, Shield, Lock, Activity 
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { 
@@ -56,57 +56,31 @@ export function Dashboard() {
   // Real counts from the user's detected entities — no fabricated fallbacks
   const aadhaarCount = getEntityCount(['AADHAAR', 'IN_AADHAAR']);
   const panCount = getEntityCount(['PAN', 'IN_PAN']);
+  const passportCount = getEntityCount(['PASSPORT']);
+  const voterIdCount = getEntityCount(['VOTER_ID', 'IN_VOTER_ID']);
+  const bankAccountCount = getEntityCount(['BANK_ACCOUNT', 'IN_BANK_ACCOUNT']);
+  const upiIdCount = getEntityCount(['UPI', 'UPI_ID']);
+  const abhaIdCount = getEntityCount(['ABHA_ID', 'IN_ABHA_ID']);
+  const biometricCount = getEntityCount(['BIOMETRIC', 'BIOMETRIC_DATA']);
+  const creditCardCount = getEntityCount(['CREDIT', 'CREDIT_CARD']);
   const phoneCount = getEntityCount(['PHONE', 'MOBILE', 'PHONE_NUMBER']);
   const emailCount = getEntityCount(['EMAIL', 'EMAIL_ADDRESS']);
-  const secretCount = getEntityCount(['SECRET', 'KEY', 'API', 'TOKEN', 'CREDENTIAL', 'PASSWORD']);
 
   const piiBreakdownData = [
-    { 
-      type: 'Aadhaar (National ID)', 
-      count: aadhaarCount, 
-      percentage: totalEntities > 0 ? Math.round((aadhaarCount / totalEntities) * 1000) / 10 : 0, 
-      color: '#06b6d4' 
-    },
-    { 
-      type: 'PAN Card (Tax ID)', 
-      count: panCount, 
-      percentage: totalEntities > 0 ? Math.round((panCount / totalEntities) * 1000) / 10 : 0, 
-      color: '#14b8a6' 
-    },
-    { 
-      type: 'Phone Number', 
-      count: phoneCount, 
-      percentage: totalEntities > 0 ? Math.round((phoneCount / totalEntities) * 1000) / 10 : 0, 
-      color: '#f59e0b' 
-    },
-    { 
-      type: 'Email Address', 
-      count: emailCount, 
-      percentage: totalEntities > 0 ? Math.round((emailCount / totalEntities) * 1000) / 10 : 0, 
-      color: '#10b981' 
-    },
-    { 
-      type: 'High Entropy Secrets', 
-      count: secretCount, 
-      percentage: totalEntities > 0 ? Math.round((secretCount / totalEntities) * 1000) / 10 : 0, 
-      color: '#ef4444' 
-    },
+    { type: 'Aadhaar (National ID)', count: aadhaarCount, percentage: totalEntities > 0 ? Math.round((aadhaarCount / totalEntities) * 1000) / 10 : 0, color: '#06b6d4' },
+    { type: 'PAN Card (Tax ID)', count: panCount, percentage: totalEntities > 0 ? Math.round((panCount / totalEntities) * 1000) / 10 : 0, color: '#14b8a6' },
+    { type: 'Passport', count: passportCount, percentage: totalEntities > 0 ? Math.round((passportCount / totalEntities) * 1000) / 10 : 0, color: '#3b82f6' },
+    { type: 'Voter ID', count: voterIdCount, percentage: totalEntities > 0 ? Math.round((voterIdCount / totalEntities) * 1000) / 10 : 0, color: '#6366f1' },
+    { type: 'Bank Account', count: bankAccountCount, percentage: totalEntities > 0 ? Math.round((bankAccountCount / totalEntities) * 1000) / 10 : 0, color: '#8b5cf6' },
+    { type: 'UPI ID', count: upiIdCount, percentage: totalEntities > 0 ? Math.round((upiIdCount / totalEntities) * 1000) / 10 : 0, color: '#a855f7' },
+    { type: 'ABHA ID', count: abhaIdCount, percentage: totalEntities > 0 ? Math.round((abhaIdCount / totalEntities) * 1000) / 10 : 0, color: '#ec4899' },
+    { type: 'Biometric Data', count: biometricCount, percentage: totalEntities > 0 ? Math.round((biometricCount / totalEntities) * 1000) / 10 : 0, color: '#f43f5e' },
+    { type: 'Credit Card', count: creditCardCount, percentage: totalEntities > 0 ? Math.round((creditCardCount / totalEntities) * 1000) / 10 : 0, color: '#eab308' },
+    { type: 'Phone Number', count: phoneCount, percentage: totalEntities > 0 ? Math.round((phoneCount / totalEntities) * 1000) / 10 : 0, color: '#f59e0b' },
+    { type: 'Email Address', count: emailCount, percentage: totalEntities > 0 ? Math.round((emailCount / totalEntities) * 1000) / 10 : 0, color: '#10b981' },
   ];
 
-  // Append any extra detected entities
-  Object.entries(entityCounts).forEach(([k, v]) => {
-    const cleanName = k.replace('IN_', '').replace('_', ' ');
-    const isAlreadyCategorized = ['AADHAAR', 'PAN', 'PHONE', 'EMAIL', 'SECRET', 'KEY'].some(x => k.toUpperCase().includes(x));
-    if (!isAlreadyCategorized) {
-      const cnt = Number(v) || 0;
-      piiBreakdownData.push({
-        type: cleanName,
-        count: cnt,
-        percentage: totalEntities > 0 ? Math.round((cnt / totalEntities) * 1000) / 10 : 0,
-        color: '#8b5cf6'
-      });
-    }
-  });
+  // Removed dynamic fallback to ensure ONLY authorized PII types are displayed.
 
   // Build trend from real per-document data (actual upload dates from backend)
   const perDocData: any[] = dashboardData?.per_document_data || [];
@@ -136,7 +110,7 @@ export function Dashboard() {
       </div>
 
       {/* Metrics Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Metric 1 */}
         <Card className="bg-card border border-border shadow-sm hover:border-cyan-500/50 transition-all duration-300">
           <CardContent className="p-6">
@@ -191,23 +165,7 @@ export function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Metric 4 */}
-        <Card className="bg-card border border-border shadow-sm hover:border-red-500/50 transition-all duration-300">
-          <CardContent className="p-6">
-            <div className="flex justify-between items-start">
-              <div className="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center border border-red-500/20">
-                <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
-              </div>
-              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                Optimal
-              </span>
-            </div>
-            <div className="mt-4">
-              <h3 className="text-3xl font-black text-foreground">0</h3>
-              <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider font-semibold">Active Travel Anomalies</p>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Metric 4 Removed */}
       </div>
 
       {/* Main Grid */}

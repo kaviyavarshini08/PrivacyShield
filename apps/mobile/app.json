@@ -7,6 +7,7 @@
     "userInterfaceStyle": "dark",
     "scheme": "privacyshield",
     "newArchEnabled": true,
+    "sdkVersion": "57.0.0",
     "ios": {
       "supportsTablet": true
     },
@@ -21,6 +22,9 @@
     "plugins": [
       "expo-router",
       "expo-secure-store"
-    ]
+    ],
+    "updates": {
+      "enabled": false
+    }
   }
 }

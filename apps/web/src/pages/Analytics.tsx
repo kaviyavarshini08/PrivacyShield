@@ -77,8 +77,15 @@ export function Analytics() {
   const activeRedacted = isAll ? (data?.redacted_count ?? 0) : (selectedDoc?.status === 'Redacted' ? 1 : 0);
   const activeAvgConf = data?.avg_confidence > 0 ? `${data.avg_confidence}%` : '0%';
 
+  const allowedEntities = new Set([
+    'IN_AADHAAR', 'IN_PAN', 'PASSPORT', 'IN_VOTER_ID', 
+    'IN_BANK_ACCOUNT', 'UPI_ID', 'IN_ABHA_ID', 'BIOMETRIC_DATA', 
+    'CREDIT_CARD', 'PHONE_NUMBER', 'EMAIL_ADDRESS'
+  ]);
+
   // Build bar + pie chart data from active entity counts
   const barChartData = Object.entries(activeEntityCounts)
+    .filter(([type]) => allowedEntities.has(type))
     .map(([type, count]) => ({
       name: type.replace('IN_', '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
       rawName: type,

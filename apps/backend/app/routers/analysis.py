@@ -47,13 +47,20 @@ async def get_vault_items(
 
     vault_items = []
     for doc in docs:
-        pii_count = doc.queue_entry.pii_found_count if doc.queue_entry else 0
+        # Count only entities that were actually redacted, not total detected
+        redacted_stmt = select(DetectedEntity).filter(
+            DetectedEntity.document_id == doc.id,
+            DetectedEntity.is_redacted == True
+        )
+        redacted_result = await db.execute(redacted_stmt)
+        redacted_count = len(redacted_result.scalars().all())
+
         vault_items.append({
             "id": doc.id,
             "name": doc.original_name,
             "size": f"{doc.file_size / (1024*1024):.2f} MB",
             "category": doc.content_type,
-            "pii": pii_count,
+            "pii": redacted_count,
             "access": "Restricted",
             "date": doc.created_at.strftime("%Y-%m-%d")
         })

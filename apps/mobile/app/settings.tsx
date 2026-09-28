@@ -303,6 +303,23 @@ export default function SettingsScreen() {
               style={dynStyles.input}
             />
 
+            {/* Password Complexity Checklist */}
+            {newPassword.length > 0 && (
+              <View style={{ marginBottom: 16, marginTop: -8, paddingLeft: 4 }}>
+                {[
+                  { label: 'At least 6 characters', met: newPassword.length >= 6 },
+                  { label: 'One uppercase letter (A-Z)', met: /[A-Z]/.test(newPassword) },
+                  { label: 'One lowercase letter (a-z)', met: /[a-z]/.test(newPassword) },
+                  { label: 'One number (0-9)', met: /[0-9]/.test(newPassword) },
+                  { label: 'One special character (!@#$%^&*)', met: /[^a-zA-Z0-9]/.test(newPassword) },
+                ].map((rule, rIdx) => (
+                  <Text key={rIdx} style={{ fontSize: 11, color: rule.met ? '#10b981' : '#64748b', marginTop: 2, fontWeight: '500' }}>
+                    {rule.met ? '✓ ' : '• '}{rule.label}
+                  </Text>
+                ))}
+              </View>
+            )}
+
             <TextInput
               mode="outlined"
               label="Confirm New Password"

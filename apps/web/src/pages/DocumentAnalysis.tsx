@@ -29,11 +29,18 @@ export function DocumentAnalysis() {
   const loadAnalysis = async (docId: string) => {
     try {
       const response = await AnalysisService.getAnalysis(docId);
+      const allowedEntities = new Set([
+        'IN_AADHAAR', 'IN_PAN', 'PASSPORT', 'IN_VOTER_ID', 
+        'IN_BANK_ACCOUNT', 'UPI_ID', 'IN_ABHA_ID', 'BIOMETRIC_DATA', 
+        'CREDIT_CARD', 'PHONE_NUMBER', 'EMAIL_ADDRESS'
+      ]);
+      const validEntities = (response.data.entities || []).filter((e: Entity) => allowedEntities.has(e.entity_type));
+
       setDocData(response.data.document);
-      setEntities(response.data.entities);
+      setEntities(validEntities);
       
       const toSelect = new Set<number>();
-      response.data.entities.forEach((e: Entity) => {
+      validEntities.forEach((e: Entity) => {
         if (!e.is_redacted && e.confidence > 0.6) {
           toSelect.add(e.id);
         }

@@ -67,6 +67,66 @@ api_key_recognizer = PatternRecognizer(
 )
 analyzer.registry.add_recognizer(api_key_recognizer)
 
+# 5. Voter ID Pattern
+voter_id_pattern = Pattern(
+    name="voter_id_pattern", 
+    regex=r"\b[A-Z]{3}[0-9]{7}\b", 
+    score=0.85
+)
+voter_id_recognizer = PatternRecognizer(
+    supported_entity="IN_VOTER_ID", 
+    patterns=[voter_id_pattern]
+)
+analyzer.registry.add_recognizer(voter_id_recognizer)
+
+# 6. Indian Bank Account Pattern
+bank_account_pattern = Pattern(
+    name="bank_account_pattern", 
+    regex=r"\b[0-9]{9,18}\b", 
+    score=0.5
+)
+bank_account_recognizer = PatternRecognizer(
+    supported_entity="IN_BANK_ACCOUNT", 
+    patterns=[bank_account_pattern]
+)
+analyzer.registry.add_recognizer(bank_account_recognizer)
+
+# 7. UPI ID Pattern
+upi_pattern = Pattern(
+    name="upi_pattern", 
+    regex=r"\b[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}\b", 
+    score=0.85
+)
+upi_recognizer = PatternRecognizer(
+    supported_entity="UPI_ID", 
+    patterns=[upi_pattern]
+)
+analyzer.registry.add_recognizer(upi_recognizer)
+
+# 8. ABHA ID Pattern (Medical)
+abha_pattern = Pattern(
+    name="abha_pattern", 
+    regex=r"\b\d{2}-\d{4}-\d{4}-\d{4}\b", 
+    score=0.90
+)
+abha_recognizer = PatternRecognizer(
+    supported_entity="IN_ABHA_ID", 
+    patterns=[abha_pattern]
+)
+analyzer.registry.add_recognizer(abha_recognizer)
+
+# 9. Biometric Text Pattern
+biometric_pattern = Pattern(
+    name="biometric_pattern", 
+    regex=r"(?i)\b(fingerprint|retina scan|facial recognition|biometric scan|medical record)\b", 
+    score=0.8
+)
+biometric_recognizer = PatternRecognizer(
+    supported_entity="BIOMETRIC_DATA", 
+    patterns=[biometric_pattern]
+)
+analyzer.registry.add_recognizer(biometric_recognizer)
+
 def analyze_text(text: str, language: str = "en") -> list:
     """
     Analyzes a text string for PII and sensitive data elements.
@@ -81,8 +141,8 @@ def analyze_text(text: str, language: str = "en") -> list:
         text=text,
         language=language,
         entities=[
-            "PHONE_NUMBER", "EMAIL_ADDRESS", "IN_PAN", "IN_AADHAAR",
-            "CREDIT_CARD", "PASSPORT", "API_KEY"
+            "IN_PAN", "IN_AADHAAR", "PASSPORT", "IN_VOTER_ID", "IN_BANK_ACCOUNT",
+            "UPI_ID", "IN_ABHA_ID", "BIOMETRIC_DATA", "CREDIT_CARD", "EMAIL_ADDRESS", "PHONE_NUMBER"
         ]
     )
     

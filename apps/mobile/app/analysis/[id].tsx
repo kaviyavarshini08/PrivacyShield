@@ -14,6 +14,17 @@ export default function DocumentAnalysisScreen() {
   const redactMutation = useRedact();
   const [selectedEntities, setSelectedEntities] = useState<number[]>([]);
 
+  const allowedEntities = new Set([
+    'IN_AADHAAR', 'IN_PAN', 'PASSPORT', 'IN_VOTER_ID', 
+    'IN_BANK_ACCOUNT', 'UPI_ID', 'IN_ABHA_ID', 'BIOMETRIC_DATA', 
+    'CREDIT_CARD', 'PHONE_NUMBER', 'EMAIL_ADDRESS'
+  ]);
+  
+  const filteredAnalysis = analysis ? {
+    ...analysis,
+    entities: analysis.entities?.filter((e: any) => allowedEntities.has(e.entity_type || e.type || e.category)) || []
+  } : null;
+
   const toggleEntity = (entityId: number) => {
     setSelectedEntities(prev =>
       prev.includes(entityId) ? prev.filter(e => e !== entityId) : [...prev, entityId]
@@ -83,22 +94,44 @@ export default function DocumentAnalysisScreen() {
                 )}
               </View>
             </View>
-
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.metricsContainer}>
-              <View style={styles.metricCard}>
-                <View style={[styles.metricIconWrap, { backgroundColor: '#e0f2fe', borderColor: '#bae6fd' }]}>
-                   <Feather name="file-text" size={20} color="#0284c7" />
+            <View style={styles.card}>
+            <View style={styles.statusRow}>
+              <Feather name="file-text" size={24} color="#3b82f6" />
+              <View style={{ marginLeft: 12, flex: 1 }}>
+                <Text style={styles.docName}>{filteredAnalysis.document?.original_name || 'Document'}</Text>
+                <Text style={styles.docMeta}>
+                  {filteredAnalysis.document?.size_kb} KB • {filteredAnalysis.document?.status}
+                </Text>
+              </View>
+              {filteredAnalysis.document?.redacted_storage_path ? (
+                <View style={[styles.badge, { backgroundColor: '#d1fae5' }]}>
+                  <Text style={[styles.badgeText, { color: '#059669' }]}>SECURED</Text>
                 </View>
-                <Text style={styles.metricValue}>{analysis.entities?.length || 0}</Text>
-                <Text style={styles.metricLabel}>Entities Detected</Text>
+              ) : (
+                <View style={[styles.badge, { backgroundColor: '#fef3c7' }]}>
+                  <Text style={[styles.badgeText, { color: '#d97706' }]}>AT RISK</Text>
+                </View>
+              )}
+            </View>
+          </View>
+
+          <View style={{ marginTop: 20 }}>
+            <Text style={styles.sectionHeader}>Analysis Overview</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingBottom: 10 }}>
+              <View style={styles.metricCard}>
+                <View style={[styles.metricIconWrap, { backgroundColor: '#eff6ff', borderColor: '#bfdbfe' }]}>
+                   <Feather name="file-text" size={20} color="#3b82f6" />
+                </View>
+                <Text style={styles.metricValue}>{filteredAnalysis.entities?.length || 0}</Text>
+                <Text style={styles.metricLabel}>Total PII Detected</Text>
               </View>
 
               <View style={styles.metricCard}>
-                <View style={[styles.metricIconWrap, { backgroundColor: '#d1fae5', borderColor: '#a7f3d0' }]}>
-                   <Feather name="shield" size={20} color="#059669" />
+                <View style={[styles.metricIconWrap, { backgroundColor: '#ecfdf5', borderColor: '#a7f3d0' }]}>
+                   <Feather name="shield" size={20} color="#10b981" />
                 </View>
                 <Text style={styles.metricValue}>
-                  {analysis.entities?.filter((e: any) => e.is_redacted).length || 0}
+                  {filteredAnalysis.entities?.filter((e: any) => e.is_redacted).length || 0}
                 </Text>
                 <Text style={styles.metricLabel}>Entities Redacted</Text>
               </View>
@@ -108,8 +141,8 @@ export default function DocumentAnalysisScreen() {
                    <Feather name="check-circle" size={20} color="#4f46e5" />
                 </View>
                 <Text style={styles.metricValue}>
-                  {analysis.entities?.length > 0 
-                    ? (analysis.entities.reduce((acc: number, e: any) => acc + (e.confidence || 0.95), 0) / analysis.entities.length * 100).toFixed(1)
+                  {filteredAnalysis.entities?.length > 0 
+                    ? (filteredAnalysis.entities.reduce((acc: number, e: any) => acc + (e.confidence || 0.95), 0) / filteredAnalysis.entities.length * 100).toFixed(1)
                     : 100}%
                 </Text>
                 <Text style={styles.metricLabel}>Avg Confidence</Text>
@@ -118,9 +151,9 @@ export default function DocumentAnalysisScreen() {
 
             <Text style={styles.sectionHeader}>Detected PII Entities</Text>
             <View style={styles.card}>
-              {analysis.entities && analysis.entities.length > 0 ? (
-                analysis.entities.map((entity: any, idx: number) => (
-                  <View key={entity.id} style={[styles.entityRow, idx === analysis.entities.length - 1 && { borderBottomWidth: 0 }]}>
+              {filteredAnalysis.entities && filteredAnalysis.entities.length > 0 ? (
+                filteredAnalysis.entities.map((entity: any, idx: number) => (
+                  <View key={entity.id} style={[styles.entityRow, idx === filteredAnalysis.entities.length - 1 && { borderBottomWidth: 0 }]}>
                     <Checkbox
                       status={entity.is_redacted ? 'checked' : selectedEntities.includes(entity.id) ? 'checked' : 'unchecked'}
                       onPress={() => { if (!entity.is_redacted) toggleEntity(entity.id) }}
@@ -132,7 +165,7 @@ export default function DocumentAnalysisScreen() {
                         {entity.text || entity.value}
                       </Text>
                       <Text style={styles.entityType}>
-                        {entity.type || entity.category} • Confidence: {Math.round((entity.confidence || 0.95) * 100)}%
+                        {entity.type || entity.category || entity.entity_type} • Confidence: {Math.round((entity.confidence || 0.95) * 100)}%
                       </Text>
                     </View>
                   </View>
@@ -142,7 +175,7 @@ export default function DocumentAnalysisScreen() {
               )}
             </View>
 
-            {analysis.entities && analysis.entities.length > 0 && selectedEntities.length > 0 && (
+            {filteredAnalysis.entities && filteredAnalysis.entities.length > 0 && selectedEntities.length > 0 && (
               <IconButton 
                 icon="shield-lock" 
                 mode="contained"
@@ -153,15 +186,16 @@ export default function DocumentAnalysisScreen() {
                 onPress={handleApplyRedaction}
               />
             )}
-            {analysis.entities && analysis.entities.length > 0 && selectedEntities.length > 0 && (
+            {filteredAnalysis.entities && filteredAnalysis.entities.length > 0 && selectedEntities.length > 0 && (
               <Text style={{ textAlign: 'center', color: '#64748b', fontSize: 12, marginTop: -8 }}>
                 Apply Redaction ({selectedEntities.length} Selected)
               </Text>
             )}
-          </>
+          </View>
+        </>
         ) : (
-          <View style={styles.card}>
-            <Text style={{ color: '#ef4444', textAlign: 'center' }}>Analysis details unavailable or expired.</Text>
+          <View style={{ alignItems: 'center', marginTop: 40 }}>
+            <Text style={{ color: '#64748b' }}>No analysis available for this document.</Text>
           </View>
         )}
       </ScrollView>
@@ -193,6 +227,11 @@ const styles = StyleSheet.create({
   },
   docTitle: { fontSize: 16, fontWeight: 'bold', color: '#0f172a' },
   docStatus: { fontSize: 12, color: '#64748b', marginTop: 4 },
+  statusRow: { flexDirection: 'row', alignItems: 'center' },
+  docName: { fontSize: 15, fontWeight: 'bold', color: '#0f172a' },
+  docMeta: { fontSize: 12, color: '#64748b', marginTop: 2 },
+  badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
+  badgeText: { fontSize: 11, fontWeight: 'bold' },
   metricsContainer: { paddingBottom: 16, gap: 12 },
   metricCard: { 
     width: 135, 

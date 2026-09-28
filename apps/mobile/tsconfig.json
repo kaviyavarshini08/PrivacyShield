@@ -1,6 +1,7 @@
 {
   "extends": "../../node_modules/expo/tsconfig.base",
   "compilerOptions": {
+    "ignoreDeprecations": "6.0",
     "strict": true,
     "baseUrl": ".",
     "paths": {

@@ -17,6 +17,14 @@ from ..core.explainability import generate_explainability_metadata, calibrate_co
 
 logger = logging.getLogger(__name__)
 
+# Only these entity types are considered real PII.
+# Generic NER types like PERSON, LOCATION, DATE_TIME are excluded.
+VALID_PII_TYPES = {
+    "IN_AADHAAR", "IN_PAN", "PASSPORT", "IN_VOTER_ID", "IN_BANK_ACCOUNT",
+    "UPI_ID", "IN_ABHA_ID", "BIOMETRIC_DATA", "CREDIT_CARD",
+    "EMAIL_ADDRESS", "PHONE_NUMBER", "API_KEY", "SECRET_LEAK",
+}
+
 def run_async(coro):
     try:
         loop = asyncio.get_event_loop()
@@ -101,9 +109,15 @@ def fallback_regex_pii_scan(file_path: str, content_type: str) -> list:
     patterns = [
         ("IN_AADHAAR", r"\b\d{4}\s?\d{4}\s?\d{4}\b", 0.90),
         ("IN_PAN", r"\b[A-Z]{5}[0-9]{4}[A-Z]{1}\b", 0.90),
+        ("PASSPORT", r"\b[A-Z]{1}[0-9]{7}\b", 0.85),
+        ("IN_VOTER_ID", r"\b[A-Z]{3}[0-9]{7}\b", 0.85),
+        ("IN_BANK_ACCOUNT", r"\b[0-9]{9,18}\b", 0.50),
+        ("UPI_ID", r"\b[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}\b", 0.85),
+        ("IN_ABHA_ID", r"\b\d{2}-\d{4}-\d{4}-\d{4}\b", 0.90),
+        ("BIOMETRIC_DATA", r"(?i)\b(fingerprint|retina scan|facial recognition|biometric scan|medical record)\b", 0.80),
+        ("CREDIT_CARD", r"\b(?:\d[ -]*?){13,16}\b", 0.85),
         ("EMAIL_ADDRESS", r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b", 0.95),
         ("PHONE_NUMBER", r"\b(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b", 0.85),
-        ("CREDIT_CARD", r"\b(?:\d[ -]*?){13,16}\b", 0.85),
     ]
     
     entities = []
@@ -173,6 +187,9 @@ def process_document_task(document_id: int):
         pii_count = 0
         for ent in entities:
             entity_type = str(ent.get("entity_type", "PII")).replace('\x00', '')
+            # Skip non-PII entity types (PERSON, LOCATION, etc.)
+            if entity_type not in VALID_PII_TYPES:
+                continue
             entity_text = str(ent.get("text", "")).replace('\x00', '')
             raw_conf = float(ent.get("confidence", 0.85))
             start_c = int(ent.get("start_char", 0))

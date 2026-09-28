@@ -97,7 +97,7 @@ export function Login() {
 
     const parts = cleanEmail.split('@');
     if (parts.length !== 2) return { valid: false, error: "Invalid email format. Please enter a valid email address." };
-    const [prefix, domain] = parts;
+    const [, domain] = parts;
 
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!emailRegex.test(cleanEmail)) {

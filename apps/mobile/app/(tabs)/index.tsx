@@ -48,29 +48,31 @@ export default function Dashboard() {
 
   const aadhaarCount = getEntityCount(['AADHAAR', 'IN_AADHAAR']);
   const panCount = getEntityCount(['PAN', 'IN_PAN']);
+  const passportCount = getEntityCount(['PASSPORT']);
+  const voterIdCount = getEntityCount(['VOTER_ID', 'IN_VOTER_ID']);
+  const bankAccountCount = getEntityCount(['BANK_ACCOUNT', 'IN_BANK_ACCOUNT']);
+  const upiIdCount = getEntityCount(['UPI', 'UPI_ID']);
+  const abhaIdCount = getEntityCount(['ABHA_ID', 'IN_ABHA_ID']);
+  const biometricCount = getEntityCount(['BIOMETRIC', 'BIOMETRIC_DATA']);
+  const creditCardCount = getEntityCount(['CREDIT', 'CREDIT_CARD']);
   const phoneCount = getEntityCount(['PHONE', 'MOBILE', 'PHONE_NUMBER']);
   const emailCount = getEntityCount(['EMAIL', 'EMAIL_ADDRESS']);
-  const secretCount = getEntityCount(['SECRET', 'KEY', 'API', 'TOKEN', 'CREDENTIAL', 'PASSWORD']);
 
   const piiBreakdownData = [
     { type: 'Aadhaar (National ID)', count: aadhaarCount, color: '#06b6d4' },
     { type: 'PAN Card (Tax ID)', count: panCount, color: '#14b8a6' },
+    { type: 'Passport', count: passportCount, color: '#3b82f6' },
+    { type: 'Voter ID', count: voterIdCount, color: '#6366f1' },
+    { type: 'Bank Account', count: bankAccountCount, color: '#8b5cf6' },
+    { type: 'UPI ID', count: upiIdCount, color: '#a855f7' },
+    { type: 'ABHA ID', count: abhaIdCount, color: '#ec4899' },
+    { type: 'Biometric Data', count: biometricCount, color: '#f43f5e' },
+    { type: 'Credit Card', count: creditCardCount, color: '#eab308' },
     { type: 'Phone Number', count: phoneCount, color: '#f59e0b' },
     { type: 'Email Address', count: emailCount, color: '#10b981' },
-    { type: 'High Entropy Secrets', count: secretCount, color: '#ef4444' },
   ];
 
-  Object.entries(entityCounts).forEach(([k, v]) => {
-    const cleanName = k.replace('IN_', '').replace('_', ' ');
-    const isAlreadyCategorized = ['AADHAAR', 'PAN', 'PHONE', 'EMAIL', 'SECRET', 'KEY'].some(x => k.toUpperCase().includes(x));
-    if (!isAlreadyCategorized) {
-      piiBreakdownData.push({
-        type: cleanName,
-        count: Number(v) || 0,
-        color: '#8b5cf6'
-      });
-    }
-  });
+  // Removed dynamic fallback to ensure ONLY authorized PII types are displayed.
 
   const activePIIData = piiBreakdownData
     .filter(item => item.count > 0)
@@ -110,7 +112,7 @@ export default function Dashboard() {
             }}
           >
             <Text style={{ color: '#ffffff', fontWeight: 'bold', fontSize: 16 }}>
-              {(user?.full_name || user?.fullName || 'U').charAt(0).toUpperCase()}
+              {(((user as any)?.full_name || user?.fullName || 'U') as string).charAt(0).toUpperCase()}
             </Text>
           </TouchableOpacity>
         </View>

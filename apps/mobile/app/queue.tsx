@@ -7,7 +7,8 @@ import { CyberButton } from '@privacyshield/ui';
 
 export default function ProcessingQueue() {
   const router = useRouter();
-  const { data: queueItems, isLoading, refetch } = useQueue();
+  const { data: rawQueueItems, isLoading, refetch } = useQueue();
+  const queueItems: any[] = (rawQueueItems as any) || [];
 
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {

@@ -11,6 +11,14 @@ from ..core.security import get_current_user
 
 router = APIRouter()
 
+# Only these entity types count as real PII for metrics and counts.
+# Generic NER types like PERSON, LOCATION, DATE_TIME are excluded.
+VALID_PII_TYPES = {
+    "IN_AADHAAR", "IN_PAN", "PASSPORT", "IN_VOTER_ID", "IN_BANK_ACCOUNT",
+    "UPI_ID", "IN_ABHA_ID", "BIOMETRIC_DATA", "CREDIT_CARD",
+    "EMAIL_ADDRESS", "PHONE_NUMBER", "API_KEY", "SECRET_LEAK",
+}
+
 @router.get("/dashboard")
 async def get_analytics_dashboard(
     db: AsyncSession = Depends(get_db),
@@ -46,13 +54,19 @@ async def get_analytics_dashboard(
                 DetectedEntity.entity_type,
                 func.count(DetectedEntity.id).label("count")
             )
-            .filter(DetectedEntity.document_id.in_(doc_ids))
+            .filter(
+                DetectedEntity.document_id.in_(doc_ids),
+                DetectedEntity.entity_type.in_(VALID_PII_TYPES)
+            )
             .group_by(DetectedEntity.entity_type)
         )
         ent_res = await db.execute(ent_stmt)
         entity_counts = {row.entity_type: row.count for row in ent_res.all()}
 
-        conf_stmt = select(func.avg(DetectedEntity.confidence)).filter(DetectedEntity.document_id.in_(doc_ids))
+        conf_stmt = select(func.avg(DetectedEntity.confidence)).filter(
+            DetectedEntity.document_id.in_(doc_ids),
+            DetectedEntity.entity_type.in_(VALID_PII_TYPES)
+        )
         conf_res = await db.execute(conf_stmt)
         avg_conf_raw = conf_res.scalar() or 0.0
         avg_confidence = round(avg_conf_raw * 100, 1) if avg_conf_raw <= 1.0 else round(avg_conf_raw, 1)
@@ -78,14 +92,20 @@ async def get_analytics_dashboard(
     # 4. Per-document breakdown for document-level chart
     per_doc_data = []
     for doc in docs:
-        ent_count_stmt = select(func.count(DetectedEntity.id)).filter(DetectedEntity.document_id == doc.id)
+        ent_count_stmt = select(func.count(DetectedEntity.id)).filter(
+            DetectedEntity.document_id == doc.id,
+            DetectedEntity.entity_type.in_(VALID_PII_TYPES)
+        )
         ent_count_res = await db.execute(ent_count_stmt)
         ent_count = ent_count_res.scalar() or 0
 
-        # Per-document entity type breakdown
+        # Per-document entity type breakdown (only valid PII types)
         ent_type_stmt = (
             select(DetectedEntity.entity_type, func.count(DetectedEntity.id).label("count"))
-            .filter(DetectedEntity.document_id == doc.id)
+            .filter(
+                DetectedEntity.document_id == doc.id,
+                DetectedEntity.entity_type.in_(VALID_PII_TYPES)
+            )
             .group_by(DetectedEntity.entity_type)
         )
         ent_type_res = await db.execute(ent_type_stmt)
