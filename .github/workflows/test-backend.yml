@@ -2,10 +2,13 @@ name: Test - Backend Unit & Security
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, master, develop ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, master, develop ]
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   test:
@@ -13,23 +16,28 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.11'
           cache: 'pip'
 
       - name: Install Backend Dependencies
         run: |
           cd apps/backend
-          pip install --upgrade pip
+          python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install bandit safety pytest openpyxl
         continue-on-error: true
 
       - name: Run Python SAST Scan (Bandit)
-        run: bandit -r apps/backend -ll -x **/__pycache__**,**/tests**
+        run: |
+          mkdir -p apps/backend
+          bandit -r apps/backend -ll -x **/__pycache__**,**/tests** -f json -o apps/backend/bandit-report.json || true
         continue-on-error: true
 
       - name: Run Pytest Suite
@@ -38,9 +46,42 @@ jobs:
           python -m pytest --junitxml=pytest-report.xml || true
         continue-on-error: true
 
+      - name: Generate Backend Test Excel Report
+        if: always()
+        run: |
+          python apps/backend/app/scripts/generate_backend_test_excel_report.py || true
+
       - name: Upload Backend Test Report Artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: backend-test-report
-          path: apps/backend/pytest-report.xml
+          path: apps/backend/backend_test_report.xlsx
+
+      - name: Commit and Push Report
+        if: always()
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          mkdir -p test-reports
+          if [ -f apps/backend/backend_test_report.xlsx ]; then
+            cp apps/backend/backend_test_report.xlsx test-reports/backend_test_report.xlsx
+            git add test-reports/backend_test_report.xlsx
+            git add apps/backend/backend_test_report.xlsx
+          fi
+          
+          # Retry loop to handle concurrent pushes during rebase
+          for i in {1..5}; do
+            if ! git diff --cached --quiet; then
+              git commit -m "chore(ci): auto-update backend test reports [skip ci]"
+              git pull --rebase origin main
+              if git push origin main; then
+                echo "Successfully pushed backend test report!"
+                break
+              fi
+            else
+              echo "No changes detected."
+              break
+            fi
+            sleep 5
+          done
