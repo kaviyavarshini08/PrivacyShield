@@ -56,7 +56,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: backend-test-report
-          path: apps/backend/backend_test_report.xlsx
+          path: |
+            apps/backend/backend_test_report.xlsx
+            test-reports/backend_test_report.xlsx
 
       - name: Commit and Push Report
         if: always()
@@ -66,8 +68,8 @@ jobs:
           mkdir -p test-reports
           if [ -f apps/backend/backend_test_report.xlsx ]; then
             cp apps/backend/backend_test_report.xlsx test-reports/backend_test_report.xlsx
-            git add test-reports/backend_test_report.xlsx
-            git add apps/backend/backend_test_report.xlsx
+            git add -f test-reports/backend_test_report.xlsx
+            git add -f apps/backend/backend_test_report.xlsx
           fi
           
           # Retry loop to handle concurrent pushes during rebase
